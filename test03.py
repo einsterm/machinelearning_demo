@@ -22,4 +22,5 @@ def splitDataset(dataset, splitRatio):
 
 if __name__ == '__main__':
     dataset = loadCsv('test.data')
-    print dataset
+    train, test = splitDataset(dataset, 0.87)
+    print len(test)
