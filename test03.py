@@ -52,8 +52,24 @@ def summarize(dataset):
     del summarize[-1]
     return summarize
 
+
+# 求正态分布
 def calcProbality(x, mean, stev):
-    pass
+    exponent = math.exp(-(math.pow(x - mean, 2)) / (2 * math.pow(stev, 2)))
+    return (1 / (math.sqrt(2 * math.pi) * stev)) * exponent
+
+
+# 在summaries中挑选最符合inputVector的概率
+def calcClassProbalilities(summaries, inputVector):
+    probabilities = {}
+    for classValue, classSummaries in summaries.iteritems():
+        probabilities[classValue] = 1
+        for i in range(len(classSummaries)):
+            mean, stdev = classSummaries[i]
+            x = inputVector[i]
+            probabilities[classValue] *= calcProbality(x, mean, stdev)
+    return probabilities
+
 
 # 训练数据集按照类别进行划分，然后计算每个属性的平均值和标准方差
 def summarizeByClass(dataset):
@@ -64,9 +80,21 @@ def summarizeByClass(dataset):
     return summaries
 
 
+def predict(summaries, inputVector):
+    probablilities = calcClassProbalilities(summaries, inputVector)
+    bestLabel, bestProb = None, -1
+    for classValue, probablility in probablilities.iteritems():
+        if bestLabel is None or probablility > bestProb:
+            bestProb = probablility
+            bestLabel = classValue
+    return bestLabel
+
+
 if __name__ == '__main__':
     # dataset = loadCsv('test.data')
     # train, test = splitDataset(dataset, 0.87)
     # separated = separateByClass(test)
     # print separated
-
+    summaries = {'A': [(1, 0.5)], 'B': [(29, 5.0)]}
+    inputVector = [1.9, 29]
+    print predict(summaries, inputVector)
