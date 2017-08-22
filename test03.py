@@ -90,11 +90,27 @@ def predict(summaries, inputVector):
     return bestLabel
 
 
+def gePredictions(summaries, testSet):
+    predictions = []
+    for i in range(len(testSet)):
+        result = predict(summaries, testSet[i])
+        predictions.append(result)
+    return predictions
+
+
+def getAccuracy(testSet, predictions):
+    correct = 0
+    for x in range(len(testSet)):
+        if testSet[x][-1] == predictions[x]:
+            correct += 1
+    return (correct / float(len(testSet))) * 100.00
+
+
 if __name__ == '__main__':
     # dataset = loadCsv('test.data')
     # train, test = splitDataset(dataset, 0.87)
     # separated = separateByClass(test)
     # print separated
     summaries = {'A': [(1, 0.5)], 'B': [(29, 5.0)]}
-    inputVector = [1.9, 29]
-    print predict(summaries, inputVector)
+    testSet = [[29, 1], [28, 9]]
+    print gePredictions(summaries, testSet)
