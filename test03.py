@@ -3,6 +3,19 @@ import csv
 import random
 import math
 
+'''
+各字段含义
+1.怀孕次数 
+2.口服葡萄糖耐量试验中血浆葡萄糖浓度 2小时 
+3.舒张压（mm Hg） 
+4.三头肌皮肤褶皱厚度（mm） 
+5. 2小时血清胰岛素（μU/ ml ） 
+6.体重指数（kg /（身高/米）^ 2） 
+7.糖尿病谱系功能 
+8.年龄（岁） 
+9.类变量（0或1） 
+'''
+
 
 def loadCsv(filename):
     lines = csv.reader(open(filename, 'rb'))
@@ -22,12 +35,12 @@ def splitDataset(dataset, splitRatio):
     return [trainSet, copy]
 
 
-# 函数假设样本中最后一个属性（-1）为类别值，返回一个类别值到数据样本列表的映射
+# 按照样本中最后一个属性（-1）为类别来生成列表
 def separateByClass(dataset):
     separated = {}
     for i in range(len(dataset)):
         vector = dataset[i]
-        if (vector[-1] not in separated):
+        if (vector[-1] not in separated):  # -1 表示该列表的最后一个元素，也就是倒数第一个元素，如果没有，则放入一个新的字典
             separated[vector[-1]] = []
         separated[vector[-1]].append(vector)
     return separated
@@ -38,7 +51,7 @@ def mean(numbers):
     return sum(numbers) / float(len(numbers))
 
 
-# 求平均值和标准方差
+# 求标准方差
 def stdev(numbers):
     avg = mean(numbers)
     sumVal = sum([pow(x - avg, 2) for x in numbers])  # pow的参数2表示平方
@@ -46,10 +59,10 @@ def stdev(numbers):
     return math.sqrt(variance)  # 求平方根
 
 
-# 按列抽出属性为一个数组，计算该的平均值和标准方差
+# 按列抽出属性为一个数组，计算返回得到平均值和标准方差的元组
 def summarize(dataset):
     summarize = [(mean(attribute), stdev(attribute)) for attribute in zip(*dataset)]
-    del summarize[-1]
+    del summarize[-1]  # 最后一个属性为类别，不需要计算，去除
     return summarize
 
 
@@ -59,13 +72,13 @@ def calcProbality(x, mean, stev):
     return (1 / (math.sqrt(2 * math.pi) * stev)) * exponent
 
 
-# 在summaries中挑选最符合inputVector的概率
+# 在summaries(结构是:summaries = {0:[(1, 0.5)], 1:[(20, 5.0)]} 元组=(均值，标准方差))中挑选最符合inputVector的概率
 def calcClassProbalilities(summaries, inputVector):
     probabilities = {}
     for classValue, classSummaries in summaries.iteritems():
-        probabilities[classValue] = 1
-        for i in range(len(classSummaries)):
-            mean, stdev = classSummaries[i]
+        probabilities[classValue] = 1  # 给个默认值
+        for i in range(len(classSummaries)):  # 属性个数
+            mean, stdev = classSummaries[i]  # 第i个属性
             x = inputVector[i]
             probabilities[classValue] *= calcProbality(x, mean, stdev)
     return probabilities
@@ -73,7 +86,7 @@ def calcClassProbalilities(summaries, inputVector):
 
 # 训练数据集按照类别进行划分，然后计算每个属性的平均值和标准方差
 def summarizeByClass(dataset):
-    separated = separateByClass(dataset)
+    separated = separateByClass(dataset)  # 按列表的最后一个元素分组，得到类似0:[[1,2,8],[9,5,7]...] 1:[[8,5,20],[44,9,1]....]
     summaries = {}
     for classValue, instance in separated.iteritems():
         summaries[classValue] = summarize(instance)
