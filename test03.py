@@ -68,7 +68,7 @@ def summarize(dataset):
     return summarize
 
 
-# 求正态分布
+# 求正态分布，核心方法
 def calcProbality(x, mean, stev):
     exponent = math.exp(-(math.pow(x - mean, 2)) / (2 * math.pow(stev, 2)))
     return (1 / (math.sqrt(2 * math.pi) * stev)) * exponent
@@ -128,6 +128,6 @@ if __name__ == '__main__':
     train, test = splitDataset(dataset, 0.99)
     separated = separateByClass(train)  # 按生病与不生病划分
     summaries = summarizeByClass(train)  # 计算每个属性的均值和标准方差
-    predictions = gePredictions(summaries, test)
-    accuracy = getAccuracy(test, predictions)
+    predictions = gePredictions(summaries, test)  # 预测结果
+    accuracy = getAccuracy(test, predictions)  # 把预测结果与样本的实际结果对比，看准确率
     print accuracy
