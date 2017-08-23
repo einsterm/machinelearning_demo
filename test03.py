@@ -68,7 +68,7 @@ def summarize(dataset):
     return summarize
 
 
-# 求正态分布，核心方法
+# 求正态分布，核心方法 标准差能反映一个数据集的离散程度
 def calcProbality(x, mean, stev):
     exponent = math.exp(-(math.pow(x - mean, 2)) / (2 * math.pow(stev, 2)))
     return (1 / (math.sqrt(2 * math.pi) * stev)) * exponent
