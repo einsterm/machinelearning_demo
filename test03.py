@@ -17,6 +17,7 @@ import math
 '''
 
 
+# 载入数据文件，每一行是一个列表，列表每个元素是一个属性，最后一个属性是表示生病1，不生病0
 def loadCsv(filename):
     lines = csv.reader(open(filename, 'rb'))
     dataset = list(lines)
@@ -25,6 +26,7 @@ def loadCsv(filename):
     return dataset
 
 
+# 把数据切分成，训练和测试二部分,splitRatio表示切分比例
 def splitDataset(dataset, splitRatio):
     trainSize = int(len(dataset) * splitRatio)
     trainSet = []
@@ -103,6 +105,7 @@ def predict(summaries, inputVector):
     return bestLabel
 
 
+# 根据训练集预测 测试集 属于那个分类
 def gePredictions(summaries, testSet):
     predictions = []
     for i in range(len(testSet)):
@@ -111,6 +114,7 @@ def gePredictions(summaries, testSet):
     return predictions
 
 
+# 对比测试数据集真实结果，和预测数据集的结果，看预测数据集的准确性
 def getAccuracy(testSet, predictions):
     correct = 0
     for x in range(len(testSet)):
@@ -120,10 +124,10 @@ def getAccuracy(testSet, predictions):
 
 
 if __name__ == '__main__':
-    # dataset = loadCsv('test.data')
-    # train, test = splitDataset(dataset, 0.87)
-    # separated = separateByClass(test)
-    # print separated
-    summaries = {'A': [(1, 0.5)], 'B': [(29, 5.0)]}
-    testSet = [[29, 1], [28, 9]]
-    print gePredictions(summaries, testSet)
+    dataset = loadCsv('test.data')
+    train, test = splitDataset(dataset, 0.99)
+    separated = separateByClass(train)  # 按生病与不生病划分
+    summaries = summarizeByClass(train)  # 计算每个属性的均值和标准方差
+    predictions = gePredictions(summaries, test)
+    accuracy = getAccuracy(test, predictions)
+    print accuracy
