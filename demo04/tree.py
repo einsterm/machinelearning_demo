@@ -99,6 +99,8 @@ def createTree(dataSet, labels):
     return myTree
 
 
+'''下面部分是展示树'''
+
 descNode = dict(boxstyle="sawtooth", fc="0.8")
 leafNode = dict(boxstyle="round4", fc="0.8")
 arrow_args = dict(arrowstyle="<-")
@@ -171,6 +173,9 @@ def createPlot(inTree):
     plotTree.yOff = 1.0
     plotTree(inTree, (0.5, 1.0), '')
     plt.show()
+
+
+'''读取和存储树'''
 
 
 def saveTree(inTree, filename):
