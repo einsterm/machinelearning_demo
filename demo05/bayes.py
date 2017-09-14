@@ -30,7 +30,7 @@ def createWordM(wordPackage, testWords):
     for word in testWords:
         if word in wordPackage:
             wordIdx = wordPackage.index(word)  # 返回该词在词袋里的下标
-            wordM[wordIdx] = 1
+            wordM[wordIdx] += 1
     return wordM
 
 
@@ -49,7 +49,7 @@ def trainNB(trainM, labels):
             p1_sum += sum(listM)  # 第i行，在类别1中，词的个数
         else:
             p0_num += listM
-            p0_sum = sum(listM)
+            p0_sum += sum(listM)
     # 每个词在类别1中出现的次数/类别1所有词的数量,之所以要加个log（求对数）,是因为两个数求商可能得到不精确的四舍五入值0
     # 因为如果 a>b 则 log(a)>log(b) 如果需要求a*b,则求log(a)+log(b)，因为log(a*b)=log(a)+log(b)
     p1 = log(p1_num / p1_sum)
