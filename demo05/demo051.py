@@ -1,6 +1,7 @@
 # --*-- encoding:utf-8 --*--
 
 from numpy import *
+import math
 
 
 def loadDataSet():
@@ -59,11 +60,16 @@ def trainNB(trainM, labels):
 
 # P(Ci|Wi)=P(Wi|Ci)*P(Ci)/P(Wi)
 # P(Ci)=类别0,1在所有类别数目的概率,比如所有类别有10个，其中类别1占的数量是5,则概率是0.5
-#P(Wi)=各个词出现的次数/所有词的数量。这个值对于不同类别，它的值是固定的，所以求P(Ci|Wi)，只需要求P(Wi|Ci)*P(Ci)
-def classfiyNB(testDataM, p0, p1, p_1):
-    p1 = sum(testDataM * p1) + log(p_1)
-    p0 = sum(testDataM * p0) + log(1.0 - p_1)
-    if p1 > p0:
+# P(Wi)=各个词出现的次数/所有词的数量。这个值对于不同类别，它的值是固定的，所以求P(Ci|Wi)，只需要求P(Wi|Ci)*P(Ci)
+# P(Wi|Ci)=P(W1|Ci)*P(W2|Ci)*...P(Wn|Ci)
+def classfiyNB(testM, p0M, p1M, p_1):
+    # 求P(Wi|Ci)=P(W1|Ci)*P(W2|Ci)*...P(Wn|Ci)，即各个单词在各类别出现的概率之积，最大的概率为优的分类
+    # 这是一个比较大小的问题，testM为各个单词出现的次数矩阵,和p0M,p1M求积，是因为testM和它们是正比例关系
+    # 之所以求和，因为p1M,p0M是对数值，因为log(a*b)=log(a)+log(b),这里要求a*b，所以只需要求和
+    p1M = sum(testM * p1M) + log(p_1)
+    # 如果用好理解的方法写应该是： p1M = sum(log(testM * math.pow(10,p1M))) + log(p_1),但 math.pow(10,p1M) 很接近0
+    p0M = sum(testM * p0M) + log(1.0 - p_1)
+    if p1M > p0M:
         return 1
     else:
         return 0
@@ -102,6 +108,7 @@ if __name__ == '__main__':
     # print p1Vect
     # print pAbusive
     # testingNB()
-    a = [[1, 2, 3], [4, 5, 6]]
-    b = [[7, 8, 9]]
-    print array(a) * array(b)
+    # a = [[1, 2, 3], [4, 5, 6]]
+    # b = [[7, 8, 9]]
+    # print array(a) * array(b)
+    print math.pow(10, 2)
