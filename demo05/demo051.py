@@ -22,7 +22,8 @@ def distinctDataList(dataSet):
         vocabSet = vocabSet | set(docment)  # 两个集合的并集
     return list(vocabSet)  # 生成词袋
 
-#生成词袋矩阵，统计testWord在wordPackage里面出现的次数
+
+# 生成词袋矩阵，统计testWord在wordPackage里面出现的次数
 def createWordM(wordPackage, testWords):
     wordM = [0] * len(wordPackage)  # 创建一个和词袋长度一样的0矩阵
     for word in testWords:
@@ -33,13 +34,13 @@ def createWordM(wordPackage, testWords):
 
 
 # trainM 是整个文档个每个单词的分布
-def trainNB0(trainM, labels):
+def trainNB(trainM, labels):
     trainLen = len(labels)  # 矩阵的长度
     allWord_num = len(trainM[0])  # 整个文档词汇不重复的个数
-    p0_num = zeros(allWord_num)
-    p1_num = zeros(allWord_num)  # 整个文档中，出现在类别1中的所有词出现的次数
-    p0_sum = 0.0
-    p1_sum = 0.0  # 整个文档中，出现在类别1中的所有词的个数
+    p0_num = ones(allWord_num)
+    p1_num = ones(allWord_num)  # 整个文档中，出现在类别1中的所有词出现的次数，默认所有词出现1次，如果设为0次，在作乘积时影响结果
+    p0_sum = 2.0
+    p1_sum = 2.0  # 整个文档中，出现在类别1中的所有词的个数
     for i in range(trainLen):
         listM = trainM[i]  # 第i行，在整个词袋里的分布
         if labels[i] == 1:
@@ -48,34 +49,17 @@ def trainNB0(trainM, labels):
         else:
             p0_num += listM
             p0_sum = sum(listM)
-    p1 = p1_num / p1_sum  # 每个词在类别1中出现的次数/类别1所有词的数量
-    p0 = p0_num / p0_sum
-    pAbusive = sum(labels) / float(trainLen)  # 出现1类词的概率
-    return p0, p1, pAbusive
-
-
-# trainM 是整个文档个每个单词的分布
-def trainNB(trainM, labels):
-    trainLen = len(labels)  # 矩阵的长度
-    allword_num = len(trainM[0])  # 整个文档词汇不重复的个数
-    p0_num = ones(allword_num)
-    p1_num = ones(allword_num)
-    p0_sum = 2.0
-    p1_sum = 2.0  # 整个文档中，
-    for i in range(trainLen):
-        arr = trainM[i]
-        if labels[i] == 1:
-            p1_num += arr  # 两个矩阵相加
-            p1_sum += sum(arr)  # 第i行，出现1的次数
-        else:
-            p0_num += arr
-            p0_sum = sum(arr)
+    # 每个词在类别1中出现的次数/类别1所有词的数量,之所以要加个log（求对数）,是因为两个数求商可能得到不精确的四舍五入值0
+    # 因为如果 a>b 则 log(a)>log(b) 如果需要求a*b,则求log(a)+log(b)，因为log(a*b)=log(a)+log(b)
     p1 = log(p1_num / p1_sum)
     p0 = log(p0_num / p0_sum)
     pAbusive = sum(labels) / float(trainLen)  # 出现1类词的概率
-    return p0, p1, pAbusive
+    return p0, p1, pAbusive  # p0,p1即所有词在类别0,1出现概率的对数值
 
 
+# P(Ci|Wi)=P(Wi|Ci)*P(Ci)/P(Wi)
+# P(Ci)=类别0,1在所有类别数目的概率,比如所有类别有10个，其中类别1占的数量是5,则概率是0.5
+#P(Wi)=各个词出现的次数/所有词的数量。这个值对于不同类别，它的值是固定的，所以求P(Ci|Wi)，只需要求P(Wi|Ci)*P(Ci)
 def classfiyNB(testDataM, p0, p1, p_1):
     p1 = sum(testDataM * p1) + log(p_1)
     p0 = sum(testDataM * p0) + log(1.0 - p_1)
@@ -92,7 +76,7 @@ def testingNB():
     for doc in dataSet:
         docinlist = createWordM(distinctList, doc)
         trainMat.append(docinlist)
-    p0, p1, pAbusive = trainNB0(array(trainMat), array(labels))
+    p0, p1, pAbusive = trainNB(array(trainMat), array(labels))
     testData = ['love', 'my', 'dog']
     thisDoc = array(createWordM(distinctList, testData))
     print classfiyNB(thisDoc, p0, p1, pAbusive)
@@ -117,4 +101,7 @@ if __name__ == '__main__':
     # print p0Vect
     # print p1Vect
     # print pAbusive
-    testingNB()
+    # testingNB()
+    a = [[1, 2, 3], [4, 5, 6]]
+    b = [[7, 8, 9]]
+    print array(a) * array(b)
