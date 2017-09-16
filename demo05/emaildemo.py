@@ -11,8 +11,8 @@ def textParse(bigString):
 
 
 def spamTest():
-    docList = []
-    labels = []
+    docList = []  # 存放了整个邮件，一封邮件是一行，每一行都分词
+    labels = []  # 用于标示是正常邮件还是垃圾邮件
     for i in range(1, 26):
         wordList = textParse(open('email/spam/%d.txt' % i).read())
         docList.append(wordList)
@@ -22,13 +22,13 @@ def spamTest():
         docList.append(wordList)
         labels.append(0)
 
-    trainingIdxSet = range(50)
-    testIdxSet = []
+    trainingIdxSet = range(50)  # 存放的是训练邮件的下标
+    testIdxSet = []  # 存放的是测试邮件的下标
 
     for i in range(10):
         randomIndex = int(random.uniform(0, len(trainingIdxSet)))
         testIdxSet.append(trainingIdxSet[randomIndex])
-        del (trainingIdxSet[randomIndex])
+        del (trainingIdxSet[randomIndex])  # 删除测试的
 
     trainingM = []
     trainingLabels = []
