@@ -1,30 +1,21 @@
+# --*-- encoding:utf-8 --*--
+'''
+求多元线性方程参数
+'''
+
 from numpy import genfromtxt
-import numpy as np
-from sklearn import datasets, linear_model
+from sklearn import linear_model
 
 dataPath = r"F:\py_wks\demo07\data.csv"
-deliveryData = genfromtxt(dataPath, delimiter=',')
-print "data"
-print deliveryData
-
-X = deliveryData[:, :-1]
-Y = deliveryData[:, -1]
-
-print "X:"
-print X
-print "Y: "
-print Y
-
-regr = linear_model.LinearRegression()
-
+deliveryData = genfromtxt(dataPath, delimiter=',')  # 读取数据文件，以逗号分隔
+X = deliveryData[:, :-1]  # 相当于dataSet
+Y = deliveryData[:, -1]  # 相当于labels
+regr = linear_model.LinearRegression()  # 建立多元线性方程模型 f(x)= b0+b1x1+b2x2
 regr.fit(X, Y)
 
-print "coefficients"
-print regr.coef_
-print "intercept: "
-print regr.intercept_
+print regr.coef_  # 得到b1,b2
+print regr.intercept_  # 得到b0
 
-xPred = [102, 6]
-yPred = regr.predict(xPred)
-print "predicted y: "
-print yPred
+# xPred = [102.0, 6.0]
+# yPred = regr.predict(xPred)
+# print yPred
