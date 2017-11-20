@@ -47,6 +47,7 @@ x = tf.placeholder(tf.float32, shape=[None, w, h, c], name='x')
 y_ = tf.placeholder(tf.int32, shape=[None, ], name='y_')
 
 conv1 = tf.layers.conv2d(
+
     inputs=x,
     filters=32,
     kernel_size=[5, 5],
