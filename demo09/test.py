@@ -1,85 +1,129 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
+from PIL import Image
+import os
+import time
+import glob
 
-################################
-# Preparing Data
-################################
+img_path = '../images/nobu/'
+model_dir = "./model/nobu/"
+model_name = "nobunaga_model"
 
-# read data from file
-data = pd.read_csv('train.csv')
+w = 100
+h = 100
+c = 3
 
-# fill nan values with 0
-data = data.fillna(0)
-# convert ['male', 'female'] values of Sex to [1, 0]
-data['Sex'] = data['Sex'].apply(lambda s: 1 if s == 'male' else 0)
-# 'Survived' is the label of one class,
-# add 'Deceased' as the other class
-data['Deceased'] = data['Survived'].apply(lambda s: 1 - s)
 
-# select features and labels for training
-dataset_X = data[['Sex', 'Age', 'Pclass', 'SibSp', 'Parch', 'Fare']].as_matrix()
-dataset_Y = data[['Deceased', 'Survived']].as_matrix()
+def read_img(path):
+    cate = [path + x for x in os.listdir(path) if os.path.isdir(path + x)]
+    imgs = []
+    labels = []
+    for idx, folder in enumerate(cate):
+        for im in glob.glob(folder + '/*.jpg'):
+            img = Image.open(im)
+            img = img.resize((w, h))
+            img = np.array(img)
+            imgs.append(img)
+            labels.append(idx)
+    return np.asanyarray(imgs, np.float32), np.asanyarray(labels, np.int32)
 
-# split training data and validation set data
-X_train, X_val, y_train, y_val = train_test_split(dataset_X, dataset_Y,
-                                                  test_size=0.2,
-                                                  random_state=42)
 
-################################
-# Constructing Dataflow Graph
-################################
+data, label = read_img(img_path)
+num_example = data.shape[0]
+arr = np.arange(num_example)
+np.random.shuffle(arr)
+data = data[arr]
+label = label[arr]
 
-# create symbolic variables
-X = tf.placeholder(tf.float32, shape=[None, 6])
-y = tf.placeholder(tf.float32, shape=[None, 2])
+ratio = 0.8
+s = np.int(num_example * ratio)
+x_train = data[:s]
+y_train = label[:s]
+x_val = data[s:]
+y_val = label[s:]
 
-# weights and bias are the variables to be trained
-weights = tf.Variable(tf.random_normal([6, 2]), name='weights')
-bias = tf.Variable(tf.zeros([2]), name='bias')
-y_pred = tf.nn.softmax(tf.matmul(X, weights) + bias)
+x = tf.placeholder(tf.float32, shape=[None, w, h, c], name='x')
+y_ = tf.placeholder(tf.int32, shape=[None, ], name='y_')
 
-# Minimise cost using cross entropy
-# NOTE: add a epsilon(1e-10) when calculate log(y_pred),
-# otherwise the result will be -inf
-cross_entropy = - tf.reduce_sum(y * tf.log(y_pred + 1e-10),
-                                reduction_indices=1)
-cost = tf.reduce_mean(cross_entropy)
+conv1 = tf.layers.conv2d(
+    inputs=x,
+    filters=32,
+    kernel_size=[5, 5],
+    padding="same",
+    activation=tf.nn.relu,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01)
+)
+pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
 
-# use gradient descent optimizer to minimize cost
-train_op = tf.train.GradientDescentOptimizer(0.001).minimize(cost)
+conv2 = tf.layers.conv2d(
 
-# calculate accuracy
-correct_pred = tf.equal(tf.argmax(y, 1), tf.argmax(y_pred, 1))
-acc_op = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+    inputs=pool1,
+    filters=64,
+    kernel_size=[5, 5],
+    padding="same",
+    activation=tf.nn.relu,
+    kernel_regularizer=tf.truncated_normal_initializer(stddev=0.01)
+)
+pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
 
-################################
-# Training and Evaluating the model
-################################
+conv3 = tf.layers.conv2d(
+    inputs=pool2,
+    filters=128,
+    kernel_size=[3, 3],
+    padding="same",
+    activation=tf.nn.relu,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01)
+)
+pool3 = tf.layers.max_pooling2d(inputs=conv3, pool_size=[2, 2], strides=2)
 
-# use session to run the calculation
-with tf.Session() as sess:
-    # variables have to be initialized at the first place
-    tf.global_variables_initializer().run()
+conv4 = tf.layers.conv2d(
+    inputs=pool3,
+    filters=128,
+    kernel_size=[3, 4],
+    padding="same",
+    activation=tf.nn.relu,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01)
+)
 
-    # training loop
-    for epoch in range(30):
-        total_loss = 0.
-        for i in range(len(X_train)):
-            # prepare feed data and run
-            feed_dict = {X: [X_train[i]], y: [y_train[i]]}
-            _, loss = sess.run([train_op, cost], feed_dict=feed_dict)
-            total_loss += loss
-        # display loss per epoch
-        print('Epoch: %04d, total loss=%.9f' % (epoch + 1, total_loss))
+pool4 = tf.layers.max_pooling2d(inputs=conv4, pool_size=[2, 2], strides=2)
+rel = tf.reshape(pool4, [-1, 6 * 6 * 128])
 
-# Accuracy calculated by TensorFlow
-    accuracy = sess.run(acc_op, feed_dict={X: X_val, y: y_val})
-    print("Accuracy on validation set: %.9f" % accuracy)
+dense1 = tf.layers.dense(
+    inputs=rel,
+    units=1024,
+    activation=tf.nn.relu,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
+    kernel_regularizer=tf.contrib.layers.l2_regularizer(0.003)
+)
+dense2 = tf.layers.dense(
+    inputs=dense1,
+    units=1024,
+    activation=tf.nn.relu,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
+    kernel_regularizer=tf.contrib.layers.l2_regularizer(0.003)
+)
+logits = tf.layers.dense(
+    inputs=dense2,
+    units=5,
+    activation=None,
+    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
+    kernel_regularizer=tf.contrib.layers.l2_regularizer(0.003)
+)
+loss = tf.losses.sparse_softmax_cross_entropy(label=y_, logits=logits)
+train_op = tf.train.AdadeltaOptimizer(learning_rate=0.001).minimize(loss)
+correct_prediction = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), y_)
+acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    # Accuracy calculated by NumPy
-    pred = sess.run(y_pred, feed_dict={X: X_val})
-    correct = np.equal(np.argmax(pred, 1), np.argmax(y_val, 1))
-    numpy_accuracy = np.mean(correct.astype(np.float32))
-    print("Accuracy on validation set (numpy): %.9f" % numpy_accuracy)
+
+def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
+    assert len(inputs) == len(targets)
+    if shuffle:
+        indices = np.arange(len(inputs))
+        np.random.shuffle(indices)
+    for start_idx in range(0, len(inputs) - batch_size + 1, batch_size):
+        if shuffle:
+            excerpt = indices[start_idx, start_idx + batch_size]
+        else:
+            excerpt = slice(start_idx, start_idx + batch_size)
+        yield input(excerpt, targets[excerpt])
