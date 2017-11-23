@@ -27,7 +27,7 @@ def gradAscent(dataMatIn, classLabels):
     maxCycles = 500
     weightsMat = ones((cloumns, 1))  # 假设最优参数是1的矩阵
     for k in range(maxCycles):
-        cloumnSumVal \把每一行的属性相加起来，即:f(x)=w0*x0+w1*x1+w2*x2
+        cloumnSumVal = dataMatrix * weightsMat  # 把每一行的属性相加起来，即:f(x)=w0*x0+w1*x1+w2*x2
         hMat = sigmoid(cloumnSumVal)  # 求出二分值
         errorMat = (labelMat - hMat)  # 误差
         dataMatrixT = dataMatrix.transpose()  # 矩阵求导结果 dataMatrix*errorMat （矩阵的求导公式）
