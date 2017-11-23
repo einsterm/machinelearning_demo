@@ -20,19 +20,19 @@ def sigmoid(inX):
 
 
 def gradAscent(dataMatIn, classLabels):
-    dataMatrix = mat(dataMatIn)
+    dataMatrix = mat(dataMatIn)  # 转化为numpy矩阵
     labelMat = mat(classLabels).transpose()  # 矩阵转置，行变成列，列变成行
     rows, cloumns = shape(dataMatrix)  # 取矩阵的长度
     alpha = 0.001
     maxCycles = 500
-    weightsMat = ones((cloumns, 1))
+    weightsMat = ones((cloumns, 1))  # 假设最优参数是1的矩阵
     for k in range(maxCycles):
-        cloumnAddVal = dataMatrix * weightsMat  # 把每一行的属性相加起来
-        hMat = sigmoid(cloumnAddVal)
-        errorMat = (labelMat - hMat)
-        dataMatrixT = dataMatrix.transpose()  # 把每一列都抽出来
+        cloumnSumVal \把每一行的属性相加起来，即:f(x)=w0*x0+w1*x1+w2*x2
+        hMat = sigmoid(cloumnSumVal)  # 求出二分值
+        errorMat = (labelMat - hMat)  # 误差
+        dataMatrixT = dataMatrix.transpose()  # 矩阵求导结果 dataMatrix*errorMat （矩阵的求导公式）
         dataMatrix1 = alpha * dataMatrixT
-        dataMatrix2 = dataMatrix1 * errorMat
+        dataMatrix2 = dataMatrix1 * errorMat  # 这个相当于损失函数
         weightsMat = weightsMat + dataMatrix2
     return weightsMat
 

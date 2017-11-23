@@ -20,5 +20,14 @@ def cal():
     return x_new
 
 
+def mycal():
+    x0 = 0
+    e = 0.1
+    for i in range(12004):
+        y = x0 + e * f_prime(x0)
+        x0 = y
+    return x0
+
+
 if __name__ == "__main__":
-    print cal()
+    print(mycal())
