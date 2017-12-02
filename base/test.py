@@ -1,4 +1,6 @@
 import numpy as np
 
 a = np.array([3, 3])
-print(a* a)
+b = np.array([1, 0])
+c = np.multiply(a, b)
+print(c)
