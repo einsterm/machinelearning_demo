@@ -147,6 +147,7 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
                     print("j not moving enough")
                     continue
                 # 然后alphas[i]和alphas[j]同样进行改变，虽然改变的大小一样，但是改变的方向正好相反
+                #a1*y1+a2*y2=a1old*y1+a2old*y2
                 alphas[i] += labelMat[j] * labelMat[i] * (alphaJold - alphas[j])
                 # 在对alpha[i], alpha[j] 进行优化之后，给这两个alpha值设置一个常数b。
                 # w= Σ[1~n] ai*yi*xi => b = yj- Σ[1~n] ai*yi(xi*xj)
@@ -242,7 +243,8 @@ if __name__ == "__main__":
     print('b=', b)
     print('alphas[alphas>0]=', alphas[alphas > 0])
     print('shape(alphas[alphas > 0])=', shape(alphas[alphas > 0]))
-    for i in range(100):
+    arrLen = 6
+    for i in range(arrLen):
         if alphas[i] > 0:
             print(dataArr[i], labelArr[i])
             # 画图
