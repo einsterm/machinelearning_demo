@@ -4,4 +4,5 @@ a = np.array([3, 3])
 b = np.array([1, 0])
 c = np.multiply(a, b)
 
-print(max(2,3))
+for i in zip(b, a):
+    print(i)
