@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # coding:utf8
 
-import  numpy as np
+import numpy as np
 from numpy import *
 import matplotlib.pyplot as plt
+
 
 def load_data(filename):
     dataset, labels = [], []
@@ -13,6 +14,8 @@ def load_data(filename):
             dataset.append([x, y])
             labels.append(label)
     return dataset, labels
+
+
 def clip(alpha, L, H):
     ''' 修建alpha的值到L和H之间.
     '''
@@ -22,27 +25,34 @@ def clip(alpha, L, H):
         return H
     else:
         return alpha
+
+
 def select_j(i, m):
     ''' 在m中随机选择除了i之外剩余的数
     '''
     l = list(range(m))
-    seq = l[: i] + l[i+1:]
+    seq = l[: i] + l[i + 1:]
     return random.choice(seq)
+
 
 def get_w(alphas, dataset, labels):
     ''' 通过已知数据点和拉格朗日乘子获得分割超平面参数w
     '''
     alphas, dataset, labels = np.array(alphas), np.array(dataset), np.array(labels)
-    yx = labels.reshape(1, -1).T*np.array([1, 1])*dataset
+    yx = labels.reshape(1, -1).T * np.array([1, 1]) * dataset
     w = np.dot(yx.T, alphas)
     return w.tolist()
+
+
+''' 简化版SMO算法实现，未使用启发式方法对alpha对进行选择.
+   :param dataset: 所有特征数据向量
+   :param labels: 所有的数据标签
+   :param C: 软间隔常数, 0 <= alpha_i <= C
+   :param max_iter: 外层循环最大迭代次数
+   '''
+
+
 def simple_smo(dataset, labels, C, max_iter):
-    ''' 简化版SMO算法实现，未使用启发式方法对alpha对进行选择.
-    :param dataset: 所有特征数据向量
-    :param labels: 所有的数据标签
-    :param C: 软间隔常数, 0 <= alpha_i <= C
-    :param max_iter: 外层循环最大迭代次数
-    '''
     dataset = np.array(dataset)
     m, n = dataset.shape
     labels = np.array(labels)
@@ -50,14 +60,15 @@ def simple_smo(dataset, labels, C, max_iter):
     alphas = np.zeros(m)
     b = 0
     it = 0
+
     def f(x):
         "SVM分类器函数 y = w^Tx + b"
         # Kernel function vector.
         x = np.matrix(x).T
         data = np.matrix(dataset)
-        ks = data*x
+        ks = data * x
         # Predictive value.
-        wx = np.matrix(alphas*labels)*ks
+        wx = np.matrix(alphas * labels) * ks
         fx = wx + b
         return fx[0, 0]
 
@@ -72,13 +83,13 @@ def simple_smo(dataset, labels, C, max_iter):
             fx_j = f(x_j)
             E_j = fx_j - y_j
             K_ii, K_jj, K_ij = np.dot(x_i, x_i), np.dot(x_j, x_j), np.dot(x_i, x_j)
-            eta = K_ii + K_jj - 2*K_ij
+            eta = K_ii + K_jj - 2 * K_ij
             if eta <= 0:
                 print('WARNING  eta <= 0')
                 continue
             # 获取更新的alpha对
             a_i_old, a_j_old = a_i, a_j
-            a_j_new = a_j_old + y_j*(E_i - E_j)/eta
+            a_j_new = a_j_old + y_j * (E_i - E_j) / eta
             # 对alpha进行修剪
             if y_i != y_j:
                 L = max(0, a_j_old - a_i_old)
@@ -87,19 +98,19 @@ def simple_smo(dataset, labels, C, max_iter):
                 L = max(0, a_i_old + a_j_old - C)
                 H = min(C, a_j_old + a_i_old)
             a_j_new = clip(a_j_new, L, H)
-            a_i_new = a_i_old + y_i*y_j*(a_j_old - a_j_new)
+            a_i_new = a_i_old + y_i * y_j * (a_j_old - a_j_new)
             if abs(a_j_new - a_j_old) < 0.00001:
                 continue
             alphas[i], alphas[j] = a_i_new, a_j_new
             # 更新阈值b
-            b_i = -E_i - y_i*K_ii*(a_i_new - a_i_old) - y_j*K_ij*(a_j_new - a_j_old) + b
-            b_j = -E_j - y_i*K_ij*(a_i_new - a_i_old) - y_j*K_jj*(a_j_new - a_j_old) + b
+            b_i = -E_i - y_i * K_ii * (a_i_new - a_i_old) - y_j * K_ij * (a_j_new - a_j_old) + b
+            b_j = -E_j - y_i * K_ij * (a_i_new - a_i_old) - y_j * K_jj * (a_j_new - a_j_old) + b
             if 0 < a_i_new < C:
                 b = b_i
             elif 0 < a_j_new < C:
                 b = b_j
             else:
-                b = (b_i + b_j)/2
+                b = (b_i + b_j) / 2
             pair_changed += 1
             print('INFO   iteration:{}  i:{}  pair_changed:{}'.format(it, i, pair_changed))
         if pair_changed == 0:
@@ -133,12 +144,11 @@ if '__main__' == __name__:
     x1, _ = max(dataset, key=lambda x: x[0])
     x2, _ = min(dataset, key=lambda x: x[0])
     a1, a2 = w
-    y1, y2 = (-b - a1*x1)/a2, (-b - a1*x2)/a2
+    y1, y2 = (-b - a1 * x1) / a2, (-b - a1 * x2) / a2
     ax.plot([x1, x2], [y1, y2])
     # 绘制支持向量
     for i, alpha in enumerate(alphas):
         if abs(alpha) > 1e-3:
             x, y = dataset[i]
-            ax.scatter([x], [y], s=150, c='none', alpha=0.7,
-                       linewidth=1.5, edgecolor='#AB3319')
+            ax.scatter([x], [y], s=150, c='none', alpha=0.7, linewidth=1.5, edgecolor='#AB3319')
     plt.show()
