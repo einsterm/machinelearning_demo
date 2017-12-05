@@ -40,8 +40,6 @@ def get_w(alphas, dataset, labels):
     '''
     alphas, dataset, labels = np.array(alphas), np.array(dataset), np.array(labels)
     a = labels.reshape(1, -1).T
-    b = a * np.array([1, 1])
-    print(b)
     yx = labels.reshape(1, -1).T * np.array([1, 1]) * dataset
     print(yx.T)
     w = np.dot(yx.T, alphas)
@@ -85,8 +83,8 @@ def simple_smo(dataset, labels, C, max_1ter):
             chenzi_2, data_2, label_2 = chenzi_mat[j], dataset[j], labels[j]
             f_data_2 = f(data_2)
             E_2 = f_data_2 - label_2
-            K_1i, K_2j, K_1j = np.dot(data_1, data_1), np.dot(data_2, data_2), np.dot(data_1, data_2)
-            eta = K_1i + K_2j - 2 * K_1j
+            K_11, K_22, K_12 = np.dot(data_1, data_1), np.dot(data_2, data_2), np.dot(data_1, data_2)
+            eta = K_11 + K_22 - 2 * K_12
             if eta <= 0:
                 print('WARNING  eta <= 0')
                 continue
@@ -106,8 +104,8 @@ def simple_smo(dataset, labels, C, max_1ter):
                 continue
             chenzi_mat[i], chenzi_mat[j] = chenzi_1_new, chenzi_2_new
             # 更新阈值b
-            b_1 = -E_1 - label_1 * K_1i * (chenzi_1_new - chenzi_1_old) - label_2 * K_1j * (chenzi_2_new - chenzi_2_old) + b
-            b_2 = -E_2 - label_1 * K_1j * (chenzi_1_new - chenzi_1_old) - label_2 * K_2j * (chenzi_2_new - chenzi_2_old) + b
+            b_1 = -E_1 - label_1 * K_11 * (chenzi_1_new - chenzi_1_old) - label_2 * K_12 * (chenzi_2_new - chenzi_2_old) + b
+            b_2 = -E_2 - label_1 * K_12 * (chenzi_1_new - chenzi_1_old) - label_2 * K_22 * (chenzi_2_new - chenzi_2_old) + b
             if 0 < chenzi_1_new < C:
                 b = b_1
             elif 0 < chenzi_2_new < C:
@@ -126,9 +124,9 @@ def simple_smo(dataset, labels, C, max_1ter):
 
 if '__main__' == __name__:
     # 加载训练数据
-    dataset, labels = load_data('testSet10.txt')
+    dataset, labels = load_data('testSet4.txt')
     # 使用简化版SMO算法优化SVM
-    chenzi_mat, b = simple_smo(dataset, labels, 50, 1000)
+    chenzi_mat, b = simple_smo(dataset, labels, 2, 40)
     # 分类数据点
     points = {'+1': [], '-1': []}
     for point, label in zip(dataset, labels):
@@ -141,11 +139,10 @@ if '__main__' == __name__:
     # 绘制数据点
     for label, pts in points.items():
         pts = np.array(pts)
-        print(label)
         if label == '+1':
-            ax.scatter(pts[:, 0], pts[:, 1], label=label, c='red')
+            ax.scatter(pts[:, 0], pts[:, 1], label=label, c='red', )
         else:
-            ax.scatter(pts[:, 0], pts[:, 1], label=label, c='blue')
+            ax.scatter(pts[:, 0], pts[:, 1], label=label, c='blue',)
             # 绘制分割线
     w = get_w(chenzi_mat, dataset, labels)
     x1, _ = max(dataset, key=lambda x: x[0])
@@ -157,5 +154,5 @@ if '__main__' == __name__:
     for i, alpha in enumerate(chenzi_mat):
         if abs(alpha) > 1e-3:
             x, y = dataset[i]
-            ax.scatter([x], [y], s=150, c='none', alpha=0.7, linewidth=1.5, edgecolor='#AB3319')
+            ax.scatter([x], [y], s=180, c='none', alpha=0.7, linewidth=2, edgecolor='black')
     plt.show()
