@@ -11,7 +11,7 @@ class optStruct:
         self.X = dataMatIn
         self.labelMat = classLabels
         self.C = C
-        self.tol = error
+        self.error = error
         self.m = shape(dataMatIn)[0]
         self.chenzi = mat(zeros((self.m, 1)))
         self.b = 0
@@ -50,7 +50,7 @@ def calcEk(obj, k):
     return Ek
 
 
-def selectJ_maxE(i, obj, E_1):  # this is the second choice -heurstic, and calcs Ej
+def selectJ_maxE(i, obj, E_1):
 
     max_2 = -1  # 选择第二个拉格朗日乘子的下标
     E_max = 0
@@ -84,8 +84,7 @@ def innerL(i, obj):
     E_1 = calcEk(obj, i)
     chenzi_1 = obj.chenzi[i]
     label_1 = obj.labelMat[i]
-
-    if ((label_1 * E_1 < -obj.tol) and (chenzi_1 < obj.C)) or ((label_1 * E_1 > obj.tol) and (chenzi_1 > 0)):
+    if ((label_1 * E_1 < -obj.error) and (chenzi_1 < obj.C)) or ((label_1 * E_1 > obj.error) and (chenzi_1 > 0)):
         j, E_2 = selectJ_maxE(i, obj, E_1)  # 选择最大的误差对应的j进行优化。效果更明显
         label_2 = obj.labelMat[j]
         chenzi_2 = obj.chenzi[j]
@@ -93,7 +92,6 @@ def innerL(i, obj):
         chenzi_1_old = chenzi_1.copy()
         chenzi_2_old = chenzi_2.copy()
 
-        # L和H用于将alphas[j]调整到0-C之间。如果L==H，就不做任何改变，直接return 0
         if (label_1 != label_2):
             L = max(0, chenzi_2 - chenzi_1)
             H = min(obj.C, obj.C + chenzi_2 - chenzi_1)
@@ -101,31 +99,18 @@ def innerL(i, obj):
             L = max(0, chenzi_2 + chenzi_1 - obj.C)
             H = min(obj.C, chenzi_2 + chenzi_1)
         if L == H:
-            print("L==H")
             return 0
-
-        # eta是alphas[j]的最优修改量，如果eta==0，需要退出for循环的当前迭代过程
-        # 参考《统计学习方法》李航-P125~P128<序列最小最优化算法>
         eta = 2.0 * obj.X[i, :] * obj.X[j, :].T - obj.X[i, :] * obj.X[i, :].T - obj.X[j, :] * obj.X[j, :].T
         if eta >= 0:
-            print("eta>=0")
             return 0
 
-        # 计算出一个新的alphas[j]值
         chenzi_2 -= label_2 * (E_1 - E_2) / eta
-        # 并使用辅助函数，以及L和H对其进行调整
         chenzi_2 = clipAlpha(chenzi_2, H, L)
-        # 更新误差缓存
         updateEk(obj, j)
-
-        # 检查alpha[j]是否只是轻微的改变，如果是的话，就退出for循环。
         if (abs(chenzi_2 - chenzi_2_old) < 0.00001):
-            print("j not moving enough")
             return 0
 
-        # 然后alphas[i]和alphas[j]同样进行改变，虽然改变的大小一样，但是改变的方向正好相反
         chenzi_1 += label_2 * label_1 * (chenzi_2_old - chenzi_2)
-        # 更新误差缓存
         updateEk(obj, i)
         b1 = obj.b - E_1 - label_1 * (chenzi_1 - chenzi_1_old) * obj.X[i, :] * obj.X[i, :].T - label_2 * (chenzi_2 - chenzi_2_old) * obj.X[i, :] * obj.X[j, :].T
         b2 = obj.b - E_2 - label_1 * (chenzi_1 - chenzi_1_old) * obj.X[i, :] * obj.X[j, :].T - label_2 * (chenzi_2 - chenzi_2_old) * obj.X[j, :] * obj.X[j, :].T
@@ -141,7 +126,7 @@ def innerL(i, obj):
 
 
 def smoP(dataMatIn, classLabels, C, error, maxIter):
-    # 创建一个 optStruct 对象
+
     obj = optStruct(mat(dataMatIn), mat(classLabels).transpose(), C, error)
     iter = 0
     entireSet = True
@@ -159,7 +144,7 @@ def smoP(dataMatIn, classLabels, C, error, maxIter):
             iter += 1
 
         if entireSet:
-            entireSet = False  # toggle entire set loop
+            entireSet = False
         elif (alphaPairsChanged == 0):
             entireSet = True
     return obj.b, obj.chenzi
@@ -209,8 +194,8 @@ def plotfig_SVM(xArr, yArr, ws, b, alphas):
 
 if __name__ == "__main__":
     # 获取特征和目标变量
-    dataArr, labelArr = loadDataSet('testSet4.txt')
+    dataArr, labelArr = loadDataSet('testSet.txt')
     # b是常量值， alphas是拉格朗日乘子
-    b, alphas = smoP(dataArr, labelArr, 1.6, 0.001, 40)
+    b, alphas = smoP(dataArr, labelArr, 0.6, 0.001, 40)
     ws = calcWs(alphas, dataArr, labelArr)
     plotfig_SVM(dataArr, labelArr, ws, b, alphas)

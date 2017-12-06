@@ -124,9 +124,9 @@ def simple_smo(dataset, labels, C, max_1ter):
 
 if '__main__' == __name__:
     # 加载训练数据
-    dataset, labels = load_data('testSet4.txt')
+    dataset, labels = load_data('testSet.txt')
     # 使用简化版SMO算法优化SVM
-    chenzi_mat, b = simple_smo(dataset, labels, 2, 40)
+    chenzi_mat, b = simple_smo(dataset, labels, 0.6, 40)
     # 分类数据点
     points = {'+1': [], '-1': []}
     for point, label in zip(dataset, labels):
