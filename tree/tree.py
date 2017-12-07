@@ -34,7 +34,7 @@ def splitDataSet(dataSet, idx, value):
     for featureList in dataSet:
         val = featureList[idx]
         if val == value:
-            rfv = featureList[:idx]  # 下标值 看“:”取那边的值
+            rfv = featureList[:idx]  # 下标值 看“:”取那边的值，也就是左边的值
             rfvVal = featureList[idx + 1:]  # 右边的值
             rfv.extend(rfvVal)
             retDataSet.append(rfv)
@@ -47,7 +47,7 @@ def chooseBestFeatureToSplit(dataSet):
     bestInfoGain = 0.0
     bestFeature = -1
     for rowIdx in range(numFeatures):
-        featureValueList = [example[rowIdx] for example in dataSet]
+        featureValueList = [example[rowIdx] for example in dataSet]  # 把第rowIdx列所有的值取出来
         featureValueSet = set(featureValueList)
         newEntropy = 0.0
         for featureValue in featureValueSet:
@@ -201,5 +201,5 @@ if __name__ == "__main__":
 
     # print majorityCnt(a)
     inTree = createTree(dataSet, labels)
-    print inTree
+    print(inTree)
     createPlot(inTree)

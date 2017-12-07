@@ -125,7 +125,7 @@ def getAccuracy(testSet, predictions):
 
 if __name__ == '__main__':
     dataset = loadCsv('testSet.txt')
-    train, test = splitDataset(dataset, 0.99)
+    train, test = splitDataset(dataset, 0.67)
     separated = separateByClass(train)  # 按生病与不生病划分
     summaries = summarizeByClass(train)  # 计算每个属性的均值和标准方差
     predictions = gePredictions(summaries, test)  # 预测结果
