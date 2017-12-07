@@ -19,7 +19,7 @@ import math
 
 # 载入数据文件，每一行是一个列表，列表每个元素是一个属性，最后一个属性是表示生病1，不生病0
 def loadCsv(filename):
-    lines = csv.reader(open(filename, 'rb'))
+    lines = csv.reader(open(filename, 'r'))
     dataset = list(lines)
     for i in range(len(dataset)):
         dataset[i] = [float(x) for x in dataset[i]]
@@ -124,10 +124,10 @@ def getAccuracy(testSet, predictions):
 
 
 if __name__ == '__main__':
-    dataset = loadCsv('test.data')
+    dataset = loadCsv('testSet.txt')
     train, test = splitDataset(dataset, 0.99)
     separated = separateByClass(train)  # 按生病与不生病划分
     summaries = summarizeByClass(train)  # 计算每个属性的均值和标准方差
     predictions = gePredictions(summaries, test)  # 预测结果
     accuracy = getAccuracy(test, predictions)  # 把预测结果与样本的实际结果对比，看准确率
-    print accuracy
+    print(accuracy)
