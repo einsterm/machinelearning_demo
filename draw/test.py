@@ -6,6 +6,5 @@ d = np.array([2, 3])
 e = np.array([True, False])
 c = np.nonzero(a)
 d = a[:, 0]
-f = np.ones((10, 1))
-f[d <= 2] = -1
-print(f)
+
+print(a[0:-1])
