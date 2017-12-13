@@ -159,6 +159,7 @@ def rulesFromConseq(goodsGroup, goodsGroupSet, myGoodsMap, confidenceList, condi
             rulesFromConseq(goodsGroup, goodsGroup_k, myGoodsMap, confidenceList, condition)
 
 
+
 if __name__ == "__main__":
     dataSet = loadDataSet()
     C1 = singleGoodsSet(dataSet)
