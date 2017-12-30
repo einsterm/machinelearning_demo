@@ -16,8 +16,8 @@ DEBUG = True
 ######################################################
 def debug(*args, **kwargs):
     global DEBUG
-    if DEBUG:
-        print(*args, **kwargs)
+    # if DEBUG:
+        # print(*args, **kwargs)
 
 
 ######################################################
@@ -122,8 +122,6 @@ def init_params(shape, K):
     mu = np.random.rand(K, D)
     cov = np.array([np.eye(D)] * K)
     alpha = np.array([1.0 / K] * K)
-    debug("Parameters initialized.")
-    debug("mu:", mu, "cov:", cov, "alpha:", alpha, sep="\n")
     return mu, cov, alpha
 
 

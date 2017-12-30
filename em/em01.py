@@ -86,8 +86,8 @@ if __name__ == '__main__':
     # 参数的初始值
     # 注意em算法对于参数的初始值是十分敏感的
     k0 = [0.3, 0.4, 0.3]
-    mu0 = [1, 2, 1]
-    sigma0 = [1, 1, 2]
+    mu0 = [2, 4, 2]
+    sigma0 = [1, 1, 4]
     step = 10
     # 使用em算法估计参数
     k1, mu1, sigma1 = em(dataArray, k0, mu0, sigma0, step)

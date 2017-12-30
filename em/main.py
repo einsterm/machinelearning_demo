@@ -18,7 +18,7 @@ matY = np.matrix(Y, copy=True)
 K = 2
 
 # 计算 GMM 模型参数
-mu, cov, alpha = GMM_EM(matY, K, 100)
+mu, cov, alpha = GMM_EM(matY, K, 50)
 
 # 根据 GMM 模型，对样本数据进行聚类，一个模型对应一个类别
 N = Y.shape[0]
