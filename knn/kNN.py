@@ -1,6 +1,6 @@
 # --*-- encoding:utf-8 --*--
 
-from  numpy import *
+from numpy import *
 import operator
 import matplotlib.pyplot as plt
 
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 # 创建训练数据
 def createDataSet():
-    group = array([[1.0, 2.3], [1.0, 3.1], [4.4, 6.1], [5.2, 7.5]])
+    group = array([[1, 2], [1, 3], [4, 6], [5, 7]])
     labels = ['A', 'A', 'B', 'B']
     return group, labels
 
@@ -33,7 +33,8 @@ def show(dataSet, labels):
 # 计算KNN距离
 def calcKnn(pointX, dataSet, labels, k):
     dataSetSize = dataSet.shape[0]  # 求矩阵的“行数”
-    diffMat = tile(pointX, (dataSetSize, 1)) - dataSet  # 把pointX与训练的矩阵相减，得到差
+    _dataMat = tile(pointX, (dataSetSize, 1))
+    diffMat = _dataMat - dataSet  # 把pointX与训练的矩阵相减，得到差
     sqDiffMat = diffMat ** 2  # 求差的平方
     distanceArray = sqDiffMat.sum(axis=1)  # 矩阵相量求和
     distanceArrayRes = distanceArray ** 0.5  # 开平方
@@ -51,4 +52,4 @@ if __name__ == '__main__':
     point = [2, 3]
     # show(dataSet, labels)
     res = calcKnn(point, dataSet, labels, 3)
-    print res
+    print(res)
