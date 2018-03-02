@@ -86,16 +86,20 @@ def createTree(dataSet, labels):
         return classList[0]
     if len(dataSet[0]) == 1:  # 只有一个标签了
         return getMaxcountLabel(classList)
-    bestFeatureRowIdx = chooseBestFeatureToSplit(dataSet)  # 获取最佳分类列的下标
-    bestFeatureLabel = labels[bestFeatureRowIdx]  # 对应的标签
+    bestFeatureIdx = chooseBestFeatureToSplit(dataSet)  # 获取最佳分类列的下标
+    bestFeatureLabel = labels[bestFeatureIdx]  # 对应的标签
     myTree = {bestFeatureLabel: {}}
-    del (labels[bestFeatureRowIdx])  # 剔除已经知道
-    allFeatureValues = [example[bestFeatureRowIdx] for example in dataSet]  # 通过列的下标，获取该下标对应列的所有值
+    del (labels[bestFeatureIdx])  # 剔除已经知道
 
+    allFeatureValues = []
+
+    for oneLine in dataSet:
+        featureValue = oneLine[bestFeatureIdx]
+        allFeatureValues.append(featureValue)  # 通过列的下标，获取该下标对应列的所有值
     bestFeatureRowVals = set(allFeatureValues)
     for rowValue in bestFeatureRowVals:
         subLabels = labels[:]
-        subDataSet = splitDataSet(dataSet, bestFeatureRowIdx, rowValue)
+        subDataSet = splitDataSet(dataSet, bestFeatureIdx, rowValue)
         myTree[bestFeatureLabel][rowValue] = createTree(subDataSet, subLabels)
     return myTree
 
