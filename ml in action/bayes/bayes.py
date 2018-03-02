@@ -101,14 +101,14 @@ def getTrainM(dataSet):
 
 
 if __name__ == '__main__':
-    # dataSet, labels = loadDataSet()
-    # trainMat = getTrainM(dataSet)
-    # p0Vect, p1Vect, pAbusive = trainNB0(trainMat, labels)
-    # print p0Vect
-    # print p1Vect
-    # print pAbusive
-    # testingNB()
-    # a = [[1, 2, 3], [4, 5, 6]]
-    # b = [[7, 8, 9]]
-    # print array(a) * array(b)
-    print math.pow(10, 2)
+    dataSet, labels = loadDataSet()
+    trainMat = getTrainM(dataSet)
+    p0Vect, p1Vect, pAbusive = trainNB(trainMat, labels)
+    print p0Vect
+    print p1Vect
+    print pAbusive
+    testingNB()
+# a = [[1, 2, 3], [4, 5, 6]]
+# b = [[7, 8, 9]]
+# print array(a) * array(b)
+# print math.pow(10, 2)
