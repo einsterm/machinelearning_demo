@@ -17,8 +17,9 @@ def calcShannonEnt(dataSet):
         labels[currentLabel] += 1
     shannon = 0.0
     for key in labels:
-        prob = float(labels[key]) / dataLen
-        shannon += -prob * math.log(prob, 2)
+        p_key = float(labels[key]) / dataLen  # 该key（即该分类）所占有的比重
+        l_key = math.log(p_key, 2)  # 根据公式计算a的信息增益
+        shannon += -p_key * l_key  # 根据公式计算熵
     return shannon
 
 
@@ -30,36 +31,36 @@ def createDataSet():
 
 # 按矩阵的列切分，idx是矩阵的列下标，value是匹配到该下标的值
 def splitDataSet(dataSet, idx, value):
-    retDataSet = []  # 切分剩下的矩阵
-    for featureList in dataSet:
-        val = featureList[idx]
+    subDataSet = []  # 切分剩下的矩阵
+    for oneLine in dataSet:
+        val = oneLine[idx]
         if val == value:
-            rfv = featureList[:idx]  # 下标值 看“:”取那边的值，也就是左边的值
-            rfvVal = featureList[idx + 1:]  # 右边的值
-            rfv.extend(rfvVal)
-            retDataSet.append(rfv)
-    return retDataSet
+            left = oneLine[:idx]  # 一行数据中，按idx下标切分，分为左右两部分数据，这里取是左边数据
+            right = oneLine[idx + 1:]  # 右边的值
+            left.extend(right)
+            subDataSet.append(left)
+    return subDataSet
 
 
 def chooseBestFeatureToSplit(dataSet):
     numFeatures = len(dataSet[0]) - 1  # 得到所有属性，特征
-    baseEntropy = calcShannonEnt(dataSet)  # 最大的熵
+    maxEntropy = calcShannonEnt(dataSet)  # 最大的熵
     bestInfoGain = 0.0
-    bestFeature = -1
+    bestFeatureIdx = -1
     for rowIdx in range(numFeatures):
         featureValueList = [example[rowIdx] for example in dataSet]  # 把第rowIdx列所有的值取出来
-        featureValueSet = set(featureValueList)
+        featureValueSet = set(featureValueList)  # 该列有几个不同的值
         newEntropy = 0.0
         for featureValue in featureValueSet:
-            subDataSet = splitDataSet(dataSet, rowIdx, featureValue)
-            prob = len(subDataSet) / float(len(dataSet))
+            subDataSet = splitDataSet(dataSet, rowIdx, featureValue)  # 满足特征值为featureValue的字数据集
+            p_featureValue = len(subDataSet) / float(len(dataSet))  # 该数据集所占的比重
             subShannon = calcShannonEnt(subDataSet)  # 剩下所有数据的熵
-            newEntropy += prob * subShannon  # 该分类在总的数据下熵，值越小，说明信息的无序程度越小
-        infoGain = baseEntropy - newEntropy  # 值越大越好，说明newEntropy越小，baseEntropy不变
+            newEntropy += p_featureValue * subShannon  # 该分类在总的数据下熵，值越小，说明信息的无序程度越小
+        infoGain = maxEntropy - newEntropy  # 值越大越好，说明newEntropy越小，baseEntropy不变
         if (infoGain > bestInfoGain):
             bestInfoGain = infoGain
-            bestFeature = rowIdx
-    return bestFeature
+            bestFeatureIdx = rowIdx
+    return bestFeatureIdx
 
 
 # 挑出labels里面，出现次数最多的label
