@@ -52,16 +52,19 @@ def buildStump(dataArr, labelArr, D):
 def adaBoostTrainDS(dataArr, labelArr, numIt=40):
     weakClassArr = []
     m = shape(dataArr)[0]
-    D = mat(ones((m, 1)) / m)  # 每分类错一行数据的概率
+    D = mat(ones((m, 1)) / m)  # 权重向量
     yucheValues = mat(zeros((m, 1)))
+
     for i in range(numIt):
         bestResult, errorMat, yucheResult = buildStump(dataArr, labelArr, D)  # 得到一个简单的决策树预测的结果
         alpha = float(0.5 * log((1.0 - errorMat) / max(errorMat, 1e-16)))  # 1e-16是给默认值，为了使分母不为零
         bestResult['alpha'] = alpha
         weakClassArr.append(bestResult)
+        # multiply(a,b)就是个乘法，如果a,b是两个数组，那么对应元素相乘
         expon = multiply(-1 * alpha * mat(labelArr).T, yucheResult)  # 判断正确的，就乘以-1，否则就乘以1， 为什么？ 书上的公式。
         D = multiply(D, exp(expon))
         D = D / D.sum()
+
         yucheValues += alpha * yucheResult
         yucheVal_sign = sign(yucheValues)  # sign 判断正为1， 0为0， 负为-1，通过最终加和的权重值，判断符号。
         eqVal = yucheVal_sign != mat(labelArr).T
@@ -110,7 +113,7 @@ def loadDataSet(fileName):
 if __name__ == "__main__":
     dataArr, labelArr = loadSimpData()
     weakClassArr, aggClassEst = adaBoostTrainDS(dataArr, labelArr, 9)
-    result = adaClassify([5], weakClassArr)
+    result = adaClassify([5.1], weakClassArr)
     print(result)
     # dataArr, labelArr = loadDataSet("horseColicTraining2.txt")
     # weakClassArr, aggClassEst = adaBoostTrainDS(dataArr, labelArr, 10)
