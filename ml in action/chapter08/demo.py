@@ -133,34 +133,17 @@ def ridgeRegres(xMat, yMat, lam=0.2):
 
 
 def ridgeTest(xArr, yArr):
-    '''
-        Desc：
-            函数 ridgeTest() 用于在一组 λ 上测试结果
-        Args：
-            xArr：样本数据的特征，即 feature
-            yArr：样本数据的类别标签，即真实数据
-        Returns：
-            wMat：将所有的回归系数输出到一个矩阵并返回
-    '''
 
     xMat = mat(xArr)
     yMat = mat(yArr).T
-    # 计算Y的均值
     yMean = mean(yMat, 0)
-    # Y的所有的特征减去均值
     yMat = yMat - yMean
-    # 标准化 x，计算 xMat 平均值
     xMeans = mean(xMat, 0)
-    # 然后计算 X的方差
-    xVar = var(xMat, 0)
-    # 所有特征都减去各自的均值并除以方差
+    xVar = var(xMat, 0) #求方差
     xMat = (xMat - xMeans) / xVar
-    # 可以在 30 个不同的 lambda 下调用 ridgeRegres() 函数。
     numTestPts = 30
-    # 创建30 * m 的全部数据为0 的矩阵
     wMat = zeros((numTestPts, shape(xMat)[1]))
     for i in range(numTestPts):
-        # exp() 返回 e^x
         ws = ridgeRegres(xMat, yMat, exp(i - 10))
         wMat[i, :] = ws.T
     return wMat
@@ -466,17 +449,7 @@ def regression2():
 
 # test for abloneDataSet
 def abaloneTest():
-    '''
-    Desc:
-        预测鲍鱼的年龄
-    Args:
-        None
-    Returns:
-        None
-    '''
-    # 加载数据
     abX, abY = loadDataSet("abalone.txt")
-    # 使用不同的核进行预测
     oldyHat01 = lwlrTest(abX[0:99], abX[0:99], abY[0:99], 0.1)
     oldyHat1 = lwlrTest(abX[0:99], abX[0:99], abY[0:99], 1)
     oldyHat10 = lwlrTest(abX[0:99], abX[0:99], abY[0:99], 10)
@@ -501,7 +474,7 @@ def abaloneTest():
 
 # test for ridgeRegression
 def regression3():
-    abX, abY = loadDataSet("input/8.Regression/abalone.txt")
+    abX, abY = loadDataSet("data1.txt")
     ridgeWeights = ridgeTest(abX, abY)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -534,7 +507,7 @@ def regression5():
 if __name__ == "__main__":
     # regression1()
     #regression2()
-    abaloneTest()
-# regression3()
+    #abaloneTest()
+    regression3()
 # regression4()
 # regression5()
