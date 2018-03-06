@@ -122,9 +122,7 @@ def ridgeRegres(xMat, yMat, lam=0.2):
     '''
 
     xTx = xMat.T * xMat
-    # 岭回归就是在矩阵 xTx 上加一个 λI 从而使得矩阵非奇异，进而能对 xTx + λI 求逆
     denom = xTx + eye(shape(xMat)[1]) * lam
-    # 检查行列式是否为零，即矩阵是否可逆，行列式为0的话就不可逆，不为0的话就是可逆。
     if linalg.det(denom) == 0.0:
         print("This matrix is singular, cannot do inverse")
         return
@@ -484,7 +482,7 @@ def regression3():
 
 # test for stageWise
 def regression4():
-    xArr, yArr = loadDataSet("input/8.Regression/abalone.txt")
+    xArr, yArr = loadDataSet("abalone.txt")
     stageWise(xArr, yArr, 0.01, 200)
     xMat = mat(xArr)
     yMat = mat(yArr).T
@@ -500,14 +498,14 @@ def regression5():
     lgX = []
     lgY = []
 
-    setDataCollect(lgX, lgY)
-    crossValidation(lgX, lgY, 10)
+    # setDataCollect(lgX, lgY)
+    # crossValidation(lgX, lgY, 10)
 
 
 if __name__ == "__main__":
     # regression1()
     #regression2()
     #abaloneTest()
-    regression3()
-# regression4()
-# regression5()
+    #regression3()
+    #regression4()
+    regression5()
