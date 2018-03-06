@@ -63,22 +63,22 @@ def leaf(dataSet):
     return np.mean(data[:, -1])
 
 
-def err_cnt(dataSet):
+def calcLabels_val(dataSet):
     '''回归树的划分指标
     input:  dataSet(list):训练数据
     output: m*s^2(float):总方差
     '''
     data = np.mat(dataSet)
-    varValue = np.var(data[:, -1])  # 样本方差,-1表示去除最后一个数据点
-    allLen = np.shape(data)[0]  # 样本总行数，也就是数据集大小
-    return varValue * allLen
+    labels_var = np.var(data[:, -1])  # 计算labels的方差
+    dataSize = np.shape(data)[0]
+    return labels_var * dataSize  # 总方差
 
 
-def build_tree(data, min_sample, min_err):
+def build_tree(data, min_sample, min_val):
     '''构建树
     input:  data(list):训练样本
             min_sample(int):叶子节点中最少的样本数
-            min_err(float):最小的error
+            min_val(float):最小的error
     output: node:树的根结点
     '''
     # 构建决策树，函数返回该决策树的根节点
@@ -86,36 +86,35 @@ def build_tree(data, min_sample, min_err):
         return node(results=leaf(data))
 
     # 1、初始化
-    best_err = err_cnt(data)
+    best_val = calcLabels_val(data)
     bestCriteria = None  # 存储最佳切分属性以及最佳切分点
     bestSets = None  # 存储切分后的两个数据集
 
     # 2、开始构建CART回归树
-    feature_num = len(data[0]) - 1
-    for fea in range(0, feature_num):
-        feature_values = {}
-        for sample in data:
-            feature_values[sample[fea]] = 1
+    feature_num = len(data[0]) - 1  # 有多少个特征，也就是列数-1
+    for colIdx in range(0, feature_num):
+        dataValueMap = {}  # 所有的dataSet值，不重复
+        for oneLine in data:
+            dataValueMap[oneLine[colIdx]] = 1
 
-        for value in feature_values.keys():
+        for spliteValue in dataValueMap.keys():
             # 2.1、尝试划分
-            (set_1, set_2) = split_tree(data, fea, value)
+            (set_1, set_2) = split_tree(data, colIdx, spliteValue)
             if len(set_1) < 2 or len(set_2) < 2:
                 continue
-            # 2.2、计算划分后的error值
-            now_err = err_cnt(set_1) + err_cnt(set_2)
+            # 2.2、计算划分后的val值
+            now_val = calcLabels_val(set_1) + calcLabels_val(set_2)
             # 2.3、更新最优划分
-            if now_err < best_err and len(set_1) > 0 and len(set_2) > 0:
-                best_err = now_err
-                bestCriteria = (fea, value)
+            if now_val < best_val and len(set_1) > 0 and len(set_2) > 0:
+                best_val = now_val
+                bestCriteria = (colIdx, spliteValue)
                 bestSets = (set_1, set_2)
 
     # 3、判断划分是否结束
-    if best_err > min_err:
-        right = build_tree(bestSets[0], min_sample, min_err)
-        left = build_tree(bestSets[1], min_sample, min_err)
-        return node(fea=bestCriteria[0], value=bestCriteria[1], \
-                    right=right, left=left)
+    if best_val > min_val:
+        right = build_tree(bestSets[0], min_sample, min_val)
+        left = build_tree(bestSets[1], min_sample, min_val)
+        return node(fea=bestCriteria[0], value=bestCriteria[1], right=right, left=left)
     else:
         return node(results=leaf(data))  # 返回当前的类别标签作为最终的类别标签
 
@@ -142,23 +141,24 @@ def predict(sample, tree):
         return predict(sample, branch)
 
 
-def cal_error(data, tree):
+def calc_gap(data, tree):
     ''' 评估CART回归树模型
     input:  data(list):
             tree:训练好的CART回归树模型
-    output: err/m(float):均方误差
+    output: gap/m(float):均方误差
     '''
-    m = len(data)  # 样本的个数   
-    n = len(data[0]) - 1  # 样本中特征的个数
-    err = 0.0
+    m = len(data)
+    n = len(data[0]) - 1
+    allGap = 0.0
     for i in xrange(m):
         tmp = []
         for j in xrange(n):
             tmp.append(data[i][j])
-        pre = predict(tmp, tree)  # 对样本计算其预测值
-        # 计算残差
-        err += (data[i][-1] - pre) * (data[i][-1] - pre)
-    return err / m
+        preValue = predict(tmp, tree)  # 对样本计算其预测值
+        realValue = data[i][-1]
+        gap = realValue - preValue
+        allGap += gap * gap
+    return allGap / m  # 计算残差
 
 
 def save_model(regression_tree, result_file):
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     regression_tree = build_tree(data, 3, 0.2)
     # 3、评估CART树
     print "----------- 3、cal err -------------"
-    err = cal_error(data, regression_tree)
+    err = calc_gap(data, regression_tree)
     print "\t--------- err : ", err
     # 4、保存最终的CART模型
     print "----------- 4、save result -----------"
