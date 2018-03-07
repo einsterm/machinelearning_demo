@@ -21,47 +21,50 @@ class treeNode:
 
 
 def createTree(allGoodsList, condition=1):
-    goodsByCounts = {}  # {行：出现次数}
+    goodsByCountsMap = {}  # {行：出现次数}
     for goodsList in allGoodsList:  # 第一次遍历
         for goods in goodsList:
-            goodsByCounts[goods] = goodsByCounts.get(goods, 0) + allGoodsList[goodsList]
-    for k in goodsByCounts.keys():
-        if goodsByCounts[k] < condition:
-            del (goodsByCounts[k])
+            goodsByCountsMap[goods] = goodsByCountsMap.get(goods, 0) + allGoodsList[goodsList]
+    for k in goodsByCountsMap.keys():
+        if goodsByCountsMap[k] < condition:
+            del (goodsByCountsMap[k])
 
-    mySingleGoodsSet = set(goodsByCounts.keys())  # 满足出现频率的goods
+    mySingleGoodsSet = set(goodsByCountsMap.keys())  # 满足出现频率的goods
     if len(mySingleGoodsSet) == 0:
         return None, None
-    for k in goodsByCounts:
-        goodsByCounts[k] = [goodsByCounts[k], None]  # 格式化:{元素key: [元素次数count, None]},这里的None为childrenNode
+    for k in goodsByCountsMap:
+        # 格式化:{元素: [元素次数count, childrenNode]}
+        goodsByCountsMap[k] = [goodsByCountsMap[k], None]
 
     rootTree = treeNode('Null Set', 1, None)
     for goodsGroupByRow, count in allGoodsList.items():  # 第二次遍历，对每一行遍历
-        _goodsByCount = {}
+        _goodsByCount = {}  # 格式{'y':3,'x':2}
         for goods in goodsGroupByRow:  # goodsGroupByRow代表一行
             if goods in mySingleGoodsSet:  # 该goods是否在我的条件范围内（频率）
-                _goodsByCount[goods] = goodsByCounts[goods][0]
+                _goodsByCount[goods] = goodsByCountsMap[goods][0]
         if len(_goodsByCount) > 0:
-            orderByCountGoods = [v[0] for v in sorted(_goodsByCount.items(), key=lambda p: p[1], reverse=True)]  # 对goods的数量由大到小排序，数量相等的按字母顺序
-            updateNode(orderByCountGoods, rootTree, goodsByCounts, count)
-    return rootTree, goodsByCounts
+            # 对goods的数量由大到小排序，数量相等的按字母顺序
+            _orderByCountGoods = [v[0] for v in sorted(_goodsByCount.items(), key=lambda p: p[1], reverse=True)]
+            updateNode(_orderByCountGoods, rootTree, goodsByCountsMap, count)
+    return rootTree, goodsByCountsMap
 
 
-def updateNode(orderByCountGoods, parentTree, goodsByCount, count):
-    maxCountGoodsName = orderByCountGoods[0]  # 出现频率最高的那个goods
+def updateNode(_orderByCountGoodsList, parentTree, goodsByCountMap, count):
+    maxCountGoodsName = _orderByCountGoodsList[0]  # 出现频率最高的那个goods
     if maxCountGoodsName in parentTree.children:
         parentTree.children[maxCountGoodsName].inc(count)
     else:
         parentTree.children[maxCountGoodsName] = treeNode(maxCountGoodsName, count, parentTree)
-        nextParentNode = goodsByCount[maxCountGoodsName][1]  # 这里刚才开始默认为None
+        nextParentNode = goodsByCountMap[maxCountGoodsName][1]  # 这里刚才开始默认为None
         thisNode = parentTree.children[maxCountGoodsName]
         if nextParentNode == None:
-            goodsByCount[maxCountGoodsName][1] = thisNode
+            goodsByCountMap[maxCountGoodsName][1] = thisNode
         else:
             updateNodeLink(nextParentNode, thisNode)
-    if len(orderByCountGoods) > 1:
+    if len(_orderByCountGoodsList) > 1:
         thisNode = parentTree.children[maxCountGoodsName]
-        updateNode(orderByCountGoods[1::], thisNode, goodsByCount, count)
+        _orderByCountGoodsList_ = _orderByCountGoodsList[1::]
+        updateNode(_orderByCountGoodsList_, thisNode, goodsByCountMap, count)
 
 
 def updateNodeLink(nodeToTest, targetNode):
@@ -90,39 +93,31 @@ def createInitSet(dataSet):
     return retDict
 
 
-def ascendTree(leafNode, prefixPath):
-    if leafNode.parent is not None:
-        prefixPath.append(leafNode.name)
-        ascendTree(leafNode.parent, prefixPath)
+def ascendTree(node, parentPath):
+    if node.parent is not None:
+        parentPath.append(node.name)
+        ascendTree(node.parent, parentPath)
 
 
-def findPrefixPath(treeNode):
+def findParentPath(childrenNode):
     condPats = {}
-    # 对 treeNode的link进行循环
-    while treeNode is not None:
-        prefixPath = []
-        # 寻找改节点的父节点，相当于找到了该节点的频繁项集
-        ascendTree(treeNode, prefixPath)
-        # 避免 单独`Z`一个元素，添加了空节点
-        if len(prefixPath) > 1:
-            # 对非basePat的倒叙值作为key,赋值为count数
-            # prefixPath[1:] 变frozenset后，字母就变无序了
-            # condPats[frozenset(prefixPath)] = treeNode.count
-            condPats[frozenset(prefixPath[1:])] = treeNode.count
-        # 递归，寻找改节点的下一个 相同值的链接节点
-        treeNode = treeNode.nodeLink
-        # print treeNode
+    while childrenNode is not None:
+        parentPath = []
+        ascendTree(childrenNode, parentPath)
+        if len(parentPath) > 1:
+            condPats[frozenset(parentPath[1:])] = childrenNode.count
+        childrenNode = childrenNode.nodeLink
     return condPats
 
 
-def mineTree(goodsByCounts, condition, preFix, freqItemList):
-    singleGoodsSet = [v[0] for v in sorted(goodsByCounts.items(), key=lambda p: p[1])]
+def mineTree(goodsByCountsMap, condition, preFix, freqItemList):
+    singleGoodsSet = [v[0] for v in sorted(goodsByCountsMap.items(), key=lambda p: p[1])]
     for goods in singleGoodsSet:
         newFreqSet = preFix.copy()
         newFreqSet.add(goods)
         freqItemList.append(newFreqSet)
-        findPath = goodsByCounts[goods][1]
-        allGoodsList = findPrefixPath(findPath)
+        findPath = goodsByCountsMap[goods][1]
+        allGoodsList = findParentPath(findPath)
         myTree, myGoodsByCounts = createTree(allGoodsList, condition)
         if myGoodsByCounts != None:
             print 'conditional tree for: ', newFreqSet
@@ -133,9 +128,10 @@ def mineTree(goodsByCounts, condition, preFix, freqItemList):
 if __name__ == '__main__':
     dataSet = loadSimpDat()
     initSet = createInitSet(dataSet)
-    tree, goodsByCounts = createTree(initSet, 3)
+    rootTree, goodsByCountsMap = createTree(initSet, 3)
     # tree.disp()
-    condPats = findPrefixPath(goodsByCounts['x'][1])
-    # print(condPats)
+    childrenNode = goodsByCountsMap['r'][1]
+    parentPath = findParentPath(childrenNode)
+    print(parentPath)
     freqItemList = []
-    mineTree(goodsByCounts, 3, set([]), freqItemList)
+    mineTree(goodsByCountsMap, 3, set([]), freqItemList)
