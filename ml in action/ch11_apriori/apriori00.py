@@ -136,4 +136,4 @@ if __name__ == "__main__":
 
     allMyGoodsList, myGoodsMap = apriori(dataSet)
     rules = generateRules(allMyGoodsList, myGoodsMap)
-    print(rules)
+    # print(rules)
