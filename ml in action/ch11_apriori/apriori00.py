@@ -128,12 +128,5 @@ def aprioriGen(Lk, k):  # creates Ck
 
 if __name__ == "__main__":
     dataSet = loadDataSet()
-    # C1 = singleGoodsSet(dataSet)
-    # print(C1)
-    # D = map(set, dataSet)
-    # L1, suppData0 = getMyGoodsByCondition(D, C1, 0.5)
-    # print(L1)
-
     allMyGoodsList, myGoodsMap = apriori(dataSet)
     rules = generateRules(allMyGoodsList, myGoodsMap)
-    # print(rules)
