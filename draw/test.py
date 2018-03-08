@@ -1,14 +1,30 @@
-import numpy as np
+#!/usr/bin/python
+# coding: utf-8
+from numpy import *
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
 
-a = np.mat(np.array([3, 3, 0, 2, 0, -2, 1, -2])).T
-b = np.array([1555, 25555555])
-d = np.mat(np.array([[2, 3], [1, 2], [3, 4]]))
-e = np.array([True, False])
-c = np.nonzero(a)
-# d = a[:, 0]
-print(d)
-print("--------")
-print(d[:-1])
-print("--------")
-print(np.var(d[:-1]))
-print(np.var(d[:-1]))
+d = mat([[4, 2], [3, 6], [4, 2], [5, 2]])
+f = mat([[1, 2], [2, 13]])
+A = mat([[1, 0], [2, -3]])
+
+U = mat([[-0.98708746, 0.16018224], [0.16018224, 0.98708746]])
+S = mat([[0.82185442, 0], [0, 3.65028154]])
+V = mat([[0.81124219, 0.58471028], [-0.58471028, 0.81124219]])
+print(U * S * V)
+m = mean(d, axis=0)
+x = d - m
+covMat = cov(x, rowvar=0)
+# eigVals, eigVects = linalg.eig(A)
+# print eigVects
+# print eigVals
+
+
+# U, S, VT = linalg.svd(A)
+# print(U)
+# print("---S----")
+# print(S)
+# print("---VT----")
+# print(VT)
+# sigmod = diag(S)
+# print(U * sigmod * VT)
