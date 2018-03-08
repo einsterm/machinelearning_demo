@@ -15,7 +15,7 @@ def pca(dataMat, topNfeat=9999999):
     meanVals = mean(dataMat, axis=0)  # 求列的平均值
     meanRemoved = dataMat - meanVals  # 每一列去减去平均值
     covMat = cov(meanRemoved, rowvar=0)  # 计算协方差
-    eigVals, eigVects = linalg.eig(mat(covMat))  # 计算特征值
+    eigVals, eigVects = linalg.eig(mat(covMat))  # 计算特征值、特征向量
     eigValInd = argsort(eigVals)  # argsort返回了排序索引
     eigValInd = eigValInd[:-(topNfeat + 1):-1]  # 取得特征值最大的那个索引
     redEigVects = eigVects[:, eigValInd]  # 取得特征值最大的那个特征向量
