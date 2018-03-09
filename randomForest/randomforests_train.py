@@ -159,4 +159,4 @@ if __name__ == "__main__":
     print "\t------correct rate: ", corr_rate
     # 4、保存最终的随机森林模型
     print "------------ 4、save model -------------"
-    save_model(trees_result, trees_feature, "result_file", "feature_file")
+    # save_model(trees_result, trees_feature, "result_file", "feature_file")

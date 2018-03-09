@@ -1,6 +1,6 @@
 # --*-- encoding:utf-8 --*--
 
-import tree
+import tree_ID3
 
 
 def readData(filename):
@@ -13,5 +13,5 @@ def readData(filename):
 
 if __name__ == "__main__":
     dataSet, labels = readData("data")
-    inTree = tree.createTree(dataSet, labels)
-    tree.createPlot(inTree)
+    inTree = tree_ID3.createTree(dataSet, labels)
+    tree_ID3.createPlot(inTree)
