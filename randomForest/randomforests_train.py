@@ -12,10 +12,6 @@ import cPickle as pickle
 
 
 def load_data(file_name):
-    '''导入数据
-    input:  file_name(string):训练数据保存的文件名
-    output: data_train(list):训练数据
-    '''
     data_train = []
     f = open(file_name)
     for line in f.readlines():
@@ -29,39 +25,27 @@ def load_data(file_name):
 
 
 def choose_samples(data, k):
-    '''
-    input:  data(list):原始数据集
-            k(int):从数据集中选择特征的个数
-    output: data_samples(list):被选择出来的样本
-            feature(list):被选择的特征index
-    '''
     m, n = np.shape(data)  # 样本的个数和样本特征的个数
     # 1、选择出k个特征的index
-    feature = []
+    featureIdxArr = []
     for j in xrange(k):
-        feature.append(rd.randint(0, n - 2))  # n-1列是标签
+        featureIdxArr.append(rd.randint(0, n - 2))  # n-1列是标签
     # 2、选择出m个样本的index
-    index = []
+    rowIdxArr = []
     for i in xrange(m):
-        index.append(rd.randint(0, m - 1))
+        rowIdxArr.append(rd.randint(0, m - 1))
     # 3、从data中选择出m个样本的k个特征，组成数据集data_samples
     data_samples = []
     for i in xrange(m):
         data_tmp = []
-        for fea in feature:
-            data_tmp.append(data[index[i]][fea])
-        data_tmp.append(data[index[i]][-1])
+        for fea in featureIdxArr:
+            data_tmp.append(data[rowIdxArr[i]][fea])
+        data_tmp.append(data[rowIdxArr[i]][-1])
         data_samples.append(data_tmp)
-    return data_samples, feature
+    return data_samples, featureIdxArr
 
 
 def random_forest_training(data_train, trees_num):
-    '''构建随机森林
-    input:  data_train(list):训练数据
-            trees_num(int):分类树的个数
-    output: trees_result(list):每一棵树的最好划分
-            trees_feature(list):每一棵树中对原始特征的选择
-    '''
     trees_result = []  # 构建好每一棵树的最好划分
     trees_feature = []
     n = np.shape(data_train)[1]  # 样本的维数
@@ -84,11 +68,6 @@ def random_forest_training(data_train, trees_num):
 
 
 def split_data(data_train, feature):
-    '''选择特征
-    input:  data_train(list):训练数据集
-            feature(list):要选择的特征
-    output: data(list):选择出来的数据集
-    '''
     m = np.shape(data_train)[0]
     data = []
 
@@ -159,4 +138,4 @@ if __name__ == "__main__":
     print "\t------correct rate: ", corr_rate
     # 4、保存最终的随机森林模型
     print "------------ 4、save model -------------"
-    # save_model(trees_result, trees_feature, "result_file", "feature_file")
+    save_model(trees_result, trees_feature, "result_file", "feature_file")

@@ -69,7 +69,7 @@ def save_result(data_test, prediction, result_file):
 if __name__ == "__main__":
     # 1、导入测试数据集
     print "--------- 1、load test data --------"
-    data_test = load_data("test_data.txt")
+    data_test = load_data("data10_test.txt")
     # 2、导入随机森林模型
     print "--------- 2、load random forest model ----------"
     trees_result, trees_feature = load_model("result_file", "feature_file")
