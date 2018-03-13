@@ -5,6 +5,7 @@ Date:20160805
 '''
 import numpy as np
 
+
 def load_data(inputfile):
     '''导入训练数据
     input:  inputfile(string)训练样本的位置
@@ -22,10 +23,11 @@ def load_data(inputfile):
         for i in xrange(len(lines) - 1):
             feature_tmp.append(float(lines[i]))
         label_data.append(int(lines[-1]))
-        
+
         feature_data.append(feature_tmp)
     f.close()  # 关闭文件
     return np.mat(feature_data), np.mat(label_data).T, len(set(label_data))
+
 
 def cost(err, label_data):
     '''计算损失函数值
@@ -41,32 +43,26 @@ def cost(err, label_data):
         else:
             sum_cost -= 0
     return sum_cost / m
-    
 
-def gradientAscent(feature_data, label_data, k, maxCycle, alpha):
-    '''利用梯度下降法训练Softmax模型
-    input:  feature_data(mat):特征
-            label_data(mat):标签
-            k(int):类别的个数
-            maxCycle(int):最大的迭代次数
-            alpha(float):学习率
-    output: weights(mat)：权重
-    '''
-    m, n = np.shape(feature_data)
+
+def gradientAscent(X_data, label_data, k, maxCycle, alpha):
+    m, n = np.shape(X_data)
     weights = np.mat(np.ones((n, k)))  # 权重的初始化
     i = 0
     while i <= maxCycle:
-        err = np.exp(feature_data * weights)
+        predictVal = np.exp(X_data * weights)
         # if i % 500 == 0:
         #     print "\t-----iter: ", i , ", cost: ", cost(err, label_data)
-        rowsum = -err.sum(axis=1)
-        rowsum = rowsum.repeat(k, axis=1)
-        err = err / rowsum
-        for x in range(m):
-            err[x, label_data[x, 0]] += 1
-        weights = weights + (alpha / m) * feature_data.T * err      
-        i += 1           
+        colSum = -predictVal.sum(axis=1)
+        allColSum = colSum.repeat(k, axis=1)
+        allCategoryVal = predictVal / allColSum
+        for rowIdx in range(m):
+            realLabel = label_data[rowIdx, 0]
+            allCategoryVal[rowIdx, realLabel] += 1  # 这里加1是指示函数
+        weights = weights + (alpha / m) * X_data.T * allCategoryVal
+        i += 1
     return weights
+
 
 def save_model(file_name, weights):
     '''保存最终的模型
@@ -81,7 +77,8 @@ def save_model(file_name, weights):
             w_tmp.append(str(weights[i, j]))
         f_w.write("\t".join(w_tmp) + "\n")
     f_w.close()
-            
+
+
 if __name__ == "__main__":
     inputfile = "data.txt"
     # 1、导入训练数据
