@@ -8,33 +8,32 @@ from activators import ReluActivator, IdentityActivator
 
 
 class RecurrentLayer(object):
-    def __init__(self, input_width, state_width,
-                 activator, learning_rate):
+    def __init__(self, input_width, state_width, activator, learning_rate):
         self.input_width = input_width
         self.state_width = state_width
         self.activator = activator
         self.learning_rate = learning_rate
-        self.times = 0       # 当前时刻初始化为t0
-        self.state_list = [] # 保存各个时刻的state
-        self.state_list.append(np.zeros(
-            (state_width, 1)))           # 初始化s0
-        self.U = np.random.uniform(-1e-4, 1e-4,
-            (state_width, input_width))  # 初始化U
-        self.W = np.random.uniform(-1e-4, 1e-4,
-            (state_width, state_width))  # 初始化W
+        self.times = 0  # 当前时刻初始化为t0
+        self.state_list = []  # 保存各个时刻的state
+        self.state_list.append(np.zeros((state_width, 1)))  # 初始化s0
+        self.U = np.random.uniform(-1e-4, 1e-4, (state_width, input_width))  # 初始化U
+        self.W = np.random.uniform(-1e-4, 1e-4, (state_width, state_width))  # 初始化W
+        # 临时添加以下
+        self.U = np.array([[1, 6, 2], [3, 4, 5]])
+        self.W = np.array([[8, 9], [6, 5]])
 
     def forward(self, input_array):
         '''
         根据『式2』进行前向计算
         '''
         self.times += 1
-        state = (np.dot(self.U, input_array) +
-                 np.dot(self.W, self.state_list[-1]))
+        z1 = np.dot(self.U, input_array)
+        z2 = np.dot(self.W, self.state_list[-1])
+        state = (z1 + z2)
         element_wise_op(state, self.activator.forward)
         self.state_list.append(state)
 
-    def backward(self, sensitivity_array, 
-                 activator):
+    def backward(self, sensitivity_array, activator):
         '''
         实现BPTT算法
         '''
@@ -50,49 +49,44 @@ class RecurrentLayer(object):
     def calc_delta(self, sensitivity_array, activator):
         self.delta_list = []  # 用来保存各个时刻的误差项
         for i in range(self.times):
-            self.delta_list.append(np.zeros(
-                (self.state_width, 1)))
-        self.delta_list.append(sensitivity_array)
+            self.delta_list.append(np.zeros((self.state_width, 1)))
+        self.delta_list.append(sensitivity_array)  # sensitivity_array为假设的误差项，放在最后，因为是反向传播
         # 迭代计算每个时刻的误差项
-        for k in range(self.times - 1, 0, -1):
+        for k in range(self.times - 1, 0, -1):  # 从大到小循环，直到0,这里减去1，因为要计算倒数第二个时刻由倒数第一时刻计算得来
             self.calc_delta_k(k, activator)
 
     def calc_delta_k(self, k, activator):
         '''
         根据k+1时刻的delta计算k时刻的delta
         '''
-        state = self.state_list[k+1].copy()
-        element_wise_op(self.state_list[k+1],
-                    activator.backward)
-        self.delta_list[k] = np.dot(
-            np.dot(self.delta_list[k+1].T, self.W),
-            np.diag(state[:,0])).T
+        Z = self.state_list[k + 1]
+        state = Z.copy()  # K+1时刻 Z的值
+        element_wise_op(Z, activator.backward)  # Z的导数
+
+        delta = self.delta_list[k + 1].T
+
+        self.delta_list[k] = np.dot(np.dot(delta, self.W), np.diag(state[:, 0])).T
 
     def calc_gradient(self):
-        self.gradient_list = [] # 保存各个时刻的权重梯度
+        self.gradient_list = []  # 保存各个时刻的权重梯度
         for t in range(self.times + 1):
-            self.gradient_list.append(np.zeros(
-                (self.state_width, self.state_width)))
+            self.gradient_list.append(np.zeros((self.state_width, self.state_width)))
         for t in range(self.times, 0, -1):
             self.calc_gradient_t(t)
         # 实际的梯度是各个时刻梯度之和
-        self.gradient = reduce(
-            lambda a, b: a + b, self.gradient_list,
-            self.gradient_list[0]) # [0]被初始化为0且没有被修改过
+        self.gradient = reduce(lambda a, b: a + b, self.gradient_list, self.gradient_list[0])  # [0]被初始化为0且没有被修改过
 
     def calc_gradient_t(self, t):
         '''
         计算每个时刻t权重的梯度
         '''
-        gradient = np.dot(self.delta_list[t],
-            self.state_list[t-1].T)
+        gradient = np.dot(self.delta_list[t], self.state_list[t - 1].T)
         self.gradient_list[t] = gradient
 
     def reset_state(self):
-        self.times = 0       # 当前时刻初始化为t0
-        self.state_list = [] # 保存各个时刻的state
-        self.state_list.append(np.zeros(
-            (self.state_width, 1)))      # 初始化s0
+        self.times = 0  # 当前时刻初始化为t0
+        self.state_list = []  # 保存各个时刻的state
+        self.state_list.append(np.zeros((self.state_width, 1)))  # 初始化s0
 
 
 def data_set():
@@ -108,38 +102,38 @@ def gradient_check():
     '''
     # 设计一个误差函数，取所有节点输出项之和
     error_function = lambda o: o.sum()
-    
+
     rl = RecurrentLayer(3, 2, IdentityActivator(), 1e-3)
 
     # 计算forward值
     x, d = data_set()
     rl.forward(x[0])
     rl.forward(x[1])
-    
+
     # 求取sensitivity map
     sensitivity_array = np.ones(rl.state_list[-1].shape,
                                 dtype=np.float64)
     # 计算梯度
     rl.backward(sensitivity_array, IdentityActivator())
-    
+
     # 检查梯度
     epsilon = 10e-4
     for i in range(rl.W.shape[0]):
         for j in range(rl.W.shape[1]):
-            rl.W[i,j] += epsilon
+            rl.W[i, j] += epsilon
             rl.reset_state()
             rl.forward(x[0])
             rl.forward(x[1])
             err1 = error_function(rl.state_list[-1])
-            rl.W[i,j] -= 2*epsilon
+            rl.W[i, j] -= 2 * epsilon
             rl.reset_state()
             rl.forward(x[0])
             rl.forward(x[1])
             err2 = error_function(rl.state_list[-1])
             expect_grad = (err1 - err2) / (2 * epsilon)
-            rl.W[i,j] += epsilon
+            rl.W[i, j] += epsilon
             print 'weights(%d,%d): expected - actural %f - %f' % (
-                i, j, expect_grad, rl.gradient[i,j])
+                i, j, expect_grad, rl.gradient[i, j])
 
 
 def test():
@@ -151,5 +145,5 @@ def test():
     return l
 
 
-
-
+if __name__ == '__main__':
+    test()
