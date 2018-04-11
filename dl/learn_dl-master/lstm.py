@@ -9,8 +9,7 @@ from activators import SigmoidActivator, TanhActivator, IdentityActivator
 
 
 class LstmLayer(object):
-    def __init__(self, input_width, state_width, 
-                 learning_rate):
+    def __init__(self, input_width, state_width, learning_rate):
         self.input_width = input_width
         self.state_width = state_width
         self.learning_rate = learning_rate
@@ -19,7 +18,7 @@ class LstmLayer(object):
         # 输出的激活函数
         self.output_activator = TanhActivator()
         # 当前时刻初始化为t0
-        self.times = 0       
+        self.times = 0
         # 各个时刻的单元状态向量c
         self.c_list = self.init_state_vec()
         # 各个时刻的输出向量h
@@ -33,35 +32,40 @@ class LstmLayer(object):
         # 各个时刻的即时状态c~
         self.ct_list = self.init_state_vec()
         # 遗忘门权重矩阵Wfh, Wfx, 偏置项bf
-        self.Wfh, self.Wfx, self.bf = (
-            self.init_weight_mat())
+        self.Wfh, self.Wfx, self.bf = (self.init_weight_mat())
+        self.Wfh = np.array([[1, 2], [3, 4]])
+        self.Wfx = np.array([[2, 1, 3], [3, 5, 1]])
+        self.bf = np.array([[0], [0]])
         # 输入门权重矩阵Wfh, Wfx, 偏置项bf
-        self.Wih, self.Wix, self.bi = (
-            self.init_weight_mat())
+        self.Wih, self.Wix, self.bi = (self.init_weight_mat())
+        self.Wih = np.array([[4, 2], [5, 4]])
+        self.Wix = np.array([[2, 4, 3], [6, 5, 2]])
+        self.bi = np.array([[0], [0]])
         # 输出门权重矩阵Wfh, Wfx, 偏置项bf
-        self.Woh, self.Wox, self.bo = (
-            self.init_weight_mat())
+        self.Woh, self.Wox, self.bo = (self.init_weight_mat())
+        self.Woh = np.array([[1, 6], [3, 5]])
+        self.Wox = np.array([[1, 4, 2], [4, 5, 3]])
+        self.bo = np.array([[0], [0]])
         # 单元状态权重矩阵Wfh, Wfx, 偏置项bf
-        self.Wch, self.Wcx, self.bc = (
-            self.init_weight_mat())
+        self.Wch, self.Wcx, self.bc = (self.init_weight_mat())
+        self.Wch = np.array([[4, 3], [2, 4]])
+        self.Wcx = np.array([[6, 5, 3], [3, 5, 6]])
+        self.bc = np.array([[0], [0]])
 
     def init_state_vec(self):
         '''
         初始化保存状态的向量
         '''
         state_vec_list = []
-        state_vec_list.append(np.zeros(
-            (self.state_width, 1)))
+        state_vec_list.append(np.zeros((self.state_width, 1)))
         return state_vec_list
 
     def init_weight_mat(self):
         '''
         初始化权重矩阵
         '''
-        Wh = np.random.uniform(-1e-4, 1e-4,
-            (self.state_width, self.state_width))
-        Wx = np.random.uniform(-1e-4, 1e-4,
-            (self.state_width, self.input_width))
+        Wh = np.random.uniform(-1e-4, 1e-4, (self.state_width, self.state_width))
+        Wx = np.random.uniform(-1e-4, 1e-4, (self.state_width, self.input_width))
         b = np.zeros((self.state_width, 1))
         return Wh, Wx, b
 
@@ -71,20 +75,16 @@ class LstmLayer(object):
         '''
         self.times += 1
         # 遗忘门
-        fg = self.calc_gate(x, self.Wfx, self.Wfh, 
-            self.bf, self.gate_activator)
+        fg = self.calc_gate(x, self.Wfx, self.Wfh, self.bf, self.gate_activator)
         self.f_list.append(fg)
         # 输入门
-        ig = self.calc_gate(x, self.Wix, self.Wih,
-            self.bi, self.gate_activator)
+        ig = self.calc_gate(x, self.Wix, self.Wih, self.bi, self.gate_activator)
         self.i_list.append(ig)
         # 输出门
-        og = self.calc_gate(x, self.Wox, self.Woh,
-            self.bo, self.gate_activator)
+        og = self.calc_gate(x, self.Wox, self.Woh, self.bo, self.gate_activator)
         self.o_list.append(og)
         # 即时状态
-        ct = self.calc_gate(x, self.Wcx, self.Wch,
-            self.bc, self.output_activator)
+        ct = self.calc_gate(x, self.Wcx, self.Wch, self.bc, self.output_activator)
         self.ct_list.append(ct)
         # 单元状态
         c = fg * self.c_list[self.times - 1] + ig * ct
@@ -97,11 +97,10 @@ class LstmLayer(object):
         '''
         计算门
         '''
-        h = self.h_list[self.times - 1] # 上次的LSTM输出
+        h = self.h_list[self.times - 1]  # 上次的LSTM输出
         net = np.dot(Wh, h) + np.dot(Wx, x) + b
         gate = activator.forward(net)
         return gate
-
 
     def backward(self, x, delta_h, activator):
         '''
@@ -129,15 +128,15 @@ class LstmLayer(object):
 
     def calc_delta(self, delta_h, activator):
         # 初始化各个时刻的误差项
-        self.delta_h_list = self.init_delta()  # 输出误差项
-        self.delta_o_list = self.init_delta()  # 输出门误差项
-        self.delta_i_list = self.init_delta()  # 输入门误差项
         self.delta_f_list = self.init_delta()  # 遗忘门误差项
-        self.delta_ct_list = self.init_delta() # 即时输出误差项
+        self.delta_i_list = self.init_delta()  # 输入门误差项
+        self.delta_ct_list = self.init_delta()  # 即时输出误差项
+        self.delta_o_list = self.init_delta()  # 输出门误差项
+        self.delta_h_list = self.init_delta()  # 输出误差项
 
         # 保存从上一层传递下来的当前时刻的误差项
         self.delta_h_list[-1] = delta_h
-        
+
         # 迭代计算每个时刻的误差项
         for k in range(self.times, 0, -1):
             self.calc_delta_k(k)
@@ -148,8 +147,7 @@ class LstmLayer(object):
         '''
         delta_list = []
         for i in range(self.times + 1):
-            delta_list.append(np.zeros(
-                (self.state_width, 1)))
+            delta_list.append(np.zeros((self.state_width, 1)))
         return delta_list
 
     def calc_delta_k(self, k):
@@ -158,36 +156,30 @@ class LstmLayer(object):
         delta_i、delta_o、delta_ct，以及k-1时刻的delta_h
         '''
         # 获得k时刻前向计算的值
-        ig = self.i_list[k]
-        og = self.o_list[k]
         fg = self.f_list[k]
+        ig = self.i_list[k]
         ct = self.ct_list[k]
+        og = self.o_list[k]
         c = self.c_list[k]
-        c_prev = self.c_list[k-1]
+
+        c_pre = self.c_list[k - 1]
         tanh_c = self.output_activator.forward(c)
         delta_k = self.delta_h_list[k]
 
         # 根据式9计算delta_o
-        delta_o = (delta_k * tanh_c * 
-            self.gate_activator.backward(og))
-        delta_f = (delta_k * og * 
-            (1 - tanh_c * tanh_c) * c_prev *
-            self.gate_activator.backward(fg))
-        delta_i = (delta_k * og * 
-            (1 - tanh_c * tanh_c) * ct *
-            self.gate_activator.backward(ig))
-        delta_ct = (delta_k * og * 
-            (1 - tanh_c * tanh_c) * ig *
-            self.output_activator.backward(ct))
+        delta_f = (delta_k * og * (1 - tanh_c * tanh_c) * c_pre * self.gate_activator.backward(fg))
+        delta_i = (delta_k * og * (1 - tanh_c * tanh_c) * ct * self.gate_activator.backward(ig))
+        delta_ct = (delta_k * og * (1 - tanh_c * tanh_c) * ig * self.output_activator.backward(ct))
+        delta_o = (delta_k * tanh_c * self.gate_activator.backward(og))
         delta_h_prev = (
                 np.dot(delta_o.transpose(), self.Woh) +
                 np.dot(delta_i.transpose(), self.Wih) +
                 np.dot(delta_f.transpose(), self.Wfh) +
                 np.dot(delta_ct.transpose(), self.Wch)
-            ).transpose()
+        ).transpose()
 
         # 保存全部delta值
-        self.delta_h_list[k-1] = delta_h_prev
+        self.delta_h_list[k - 1] = delta_h_prev
         self.delta_f_list[k] = delta_f
         self.delta_i_list[k] = delta_i
         self.delta_o_list[k] = delta_o
@@ -195,26 +187,21 @@ class LstmLayer(object):
 
     def calc_gradient(self, x):
         # 初始化遗忘门权重梯度矩阵和偏置项
-        self.Wfh_grad, self.Wfx_grad, self.bf_grad = (
-            self.init_weight_gradient_mat())
+        self.Wfh_grad, self.Wfx_grad, self.bf_grad = (self.init_weight_gradient_mat())
         # 初始化输入门权重梯度矩阵和偏置项
-        self.Wih_grad, self.Wix_grad, self.bi_grad = (
-            self.init_weight_gradient_mat())
+        self.Wih_grad, self.Wix_grad, self.bi_grad = (self.init_weight_gradient_mat())
         # 初始化输出门权重梯度矩阵和偏置项
-        self.Woh_grad, self.Wox_grad, self.bo_grad = (
-            self.init_weight_gradient_mat())
+        self.Woh_grad, self.Wox_grad, self.bo_grad = (self.init_weight_gradient_mat())
         # 初始化单元状态权重梯度矩阵和偏置项
-        self.Wch_grad, self.Wcx_grad, self.bc_grad = (
-            self.init_weight_gradient_mat())
+        self.Wch_grad, self.Wcx_grad, self.bc_grad = (self.init_weight_gradient_mat())
 
-       # 计算对上一次输出h的权重梯度
+        # 计算对上一次输出h的权重梯度
         for t in range(self.times, 0, -1):
             # 计算各个时刻的梯度
             (Wfh_grad, bf_grad,
-            Wih_grad, bi_grad,
-            Woh_grad, bo_grad,
-            Wch_grad, bc_grad) = (
-                self.calc_gradient_t(t))
+             Wih_grad, bi_grad,
+             Woh_grad, bo_grad,
+             Wch_grad, bc_grad) = (self.calc_gradient_t(t))
             # 实际梯度是各时刻梯度之和
             self.Wfh_grad += Wfh_grad
             self.bf_grad += bf_grad
@@ -236,10 +223,8 @@ class LstmLayer(object):
         '''
         初始化权重矩阵
         '''
-        Wh_grad = np.zeros((self.state_width,
-            self.state_width))
-        Wx_grad = np.zeros((self.state_width,
-            self.input_width))
+        Wh_grad = np.zeros((self.state_width, self.state_width))
+        Wx_grad = np.zeros((self.state_width, self.input_width))
         b_grad = np.zeros((self.state_width, 1))
         return Wh_grad, Wx_grad, b_grad
 
@@ -247,7 +232,7 @@ class LstmLayer(object):
         '''
         计算每个时刻t权重的梯度
         '''
-        h_prev = self.h_list[t-1].transpose()
+        h_prev = self.h_list[t - 1].transpose()
         Wfh_grad = np.dot(self.delta_f_list[t], h_prev)
         bf_grad = self.delta_f_list[t]
         Wih_grad = np.dot(self.delta_i_list[t], h_prev)
@@ -261,7 +246,7 @@ class LstmLayer(object):
 
     def reset_state(self):
         # 当前时刻初始化为t0
-        self.times = 0       
+        self.times = 0
         # 各个时刻的单元状态向量c
         self.c_list = self.init_state_vec()
         # 各个时刻的输出向量h
@@ -289,38 +274,37 @@ def gradient_check():
     '''
     # 设计一个误差函数，取所有节点输出项之和
     error_function = lambda o: o.sum()
-    
+
     lstm = LstmLayer(3, 2, 1e-3)
 
     # 计算forward值
     x, d = data_set()
     lstm.forward(x[0])
     lstm.forward(x[1])
-    
+
     # 求取sensitivity map
-    sensitivity_array = np.ones(lstm.h_list[-1].shape,
-                                dtype=np.float64)
+    sensitivity_array = np.ones(lstm.h_list[-1].shape, dtype=np.float64)
     # 计算梯度
     lstm.backward(x[1], sensitivity_array, IdentityActivator())
-    
+
     # 检查梯度
     epsilon = 10e-4
     for i in range(lstm.Wfh.shape[0]):
         for j in range(lstm.Wfh.shape[1]):
-            lstm.Wfh[i,j] += epsilon
+            lstm.Wfh[i, j] += epsilon
             lstm.reset_state()
             lstm.forward(x[0])
             lstm.forward(x[1])
             err1 = error_function(lstm.h_list[-1])
-            lstm.Wfh[i,j] -= 2*epsilon
+            lstm.Wfh[i, j] -= 2 * epsilon
             lstm.reset_state()
             lstm.forward(x[0])
             lstm.forward(x[1])
             err2 = error_function(lstm.h_list[-1])
             expect_grad = (err1 - err2) / (2 * epsilon)
-            lstm.Wfh[i,j] += epsilon
+            lstm.Wfh[i, j] += epsilon
             print 'weights(%d,%d): expected - actural %.4e - %.4e' % (
-                i, j, expect_grad, lstm.Wfh_grad[i,j])
+                i, j, expect_grad, lstm.Wfh_grad[i, j])
     return lstm
 
 
@@ -333,5 +317,5 @@ def test():
     return l
 
 
-
-
+if __name__ == '__main__':
+    test()
