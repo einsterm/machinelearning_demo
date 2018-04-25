@@ -34,6 +34,7 @@ def conv_basic(_input, _w, _b, _keepratio):
     # conv layer 1 这里的padding可以自动计算出来，所以不用指定,SAME是指缺位补0
     _conv1 = tf.nn.conv2d(_input_r, _w['wc1'], strides=[1, 1, 1, 1], padding='SAME')
     _conv1 = tf.nn.relu(tf.nn.bias_add(_conv1, _b['bc1']))
+    #[batchSize,w,h,channelSize]
     _pool1 = tf.nn.max_pool(_conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
     _pool_dr1 = tf.nn.dropout(_pool1, _keepratio)
 
