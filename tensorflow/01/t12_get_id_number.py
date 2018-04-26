@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-import pytesseract
-from PIL import Image
 
-debug = 1
+debug = 0
 
 
 def preprocess(gray):
