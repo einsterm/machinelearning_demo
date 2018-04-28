@@ -10,6 +10,7 @@ number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 ALPHABET = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
+
 # 验证码一般都无视大小写；验证码长度4个字符
 def random_captcha_text(char_set=number + alphabet + ALPHABET, captcha_size=4):
     captcha_text = []
@@ -17,6 +18,7 @@ def random_captcha_text(char_set=number + alphabet + ALPHABET, captcha_size=4):
         c = random.choice(char_set)
         captcha_text.append(c)
     return captcha_text
+
 
 # 生成字符对应的验证码
 def gen_captcha_text_and_image():
@@ -34,7 +36,7 @@ print("验证码图像channel:", image.shape)  # (60, 160, 3)
 # 图像大小
 image_height = 60
 image_width = 160
-max_captcha = len(text)
+max_captcha = len(text)  # 验证码含有几个字符
 print("验证码文本最长字符数", max_captcha)  # 验证码最长4字符; 我全部固定为4,可以不固定. 如果验证码长度小于4，用'_'补齐
 
 
@@ -197,11 +199,32 @@ def train_crack_captcha_cnn():
                 print(step, acc)
                 # 如果准确率大于50%,保存模型,完成训练
                 if acc > 0.5:
-                    saver.save(sess, "crack_capcha.model", global_step=step)
+                    saver.save(sess, "crack_capcha.model", global_step=step)  # 保存训练结果
                     break
             step += 1
 
 
+# 预测方法
+def crack_captcha(captcha_image):
+    output = crack_captcha_cnn()
+    saver = tf.train.Saver()
+    with tf.Session() as sess:
+        saver.restore(sess, tf.train.latest_checkpoint('.'))  # 读取训练的参数
+        predict = tf.argmax(tf.reshape(output, [-1, max_captcha, char_set_len]), 2)
+        text_list = sess.run(predict, feed_dict={X: [captcha_image], keep_prob: 1})
+        text = text_list[0].tolist()
+        vector = np.zeros(max_captcha * char_set_len)
+        i = 0
+        for n in text:
+            vector[i * char_set_len + n] = 1
+            i += 1
+        return vec2text(vector)
+
+
 if __name__ == '__main__':
-    # train_crack_captcha_cnn()
-    print(text2vec('ABCD'))
+    train_crack_captcha_cnn()  # 先训练
+    text, image = gen_captcha_text_and_image()
+    image = convert2gray(image)  # 生成一张新图
+    image = image.flatten() / 255  # 将图片一维化
+    result = crack_captcha(image)  # 预测结果
+    print(result)
