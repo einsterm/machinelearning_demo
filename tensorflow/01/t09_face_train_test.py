@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 import cv2
 import numpy as np
-import os
+import dlib
 import random
 import sys
-import dlib
 import tensorflow as tf
+
 from sklearn.model_selection import train_test_split
+import os
+
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+
 
 my_faces_path = './my_faces'
 other_faces_path = './other_faces'
 size = 64
-train_x, test_x, train_y, test_y = []
-batch_size = 100
-num_batch = 0
-x = tf.placeholder(tf.float32, [None, size, size, 3])
-y_ = tf.placeholder(tf.float32, [None, 2])
-keep_prob_5 = tf.placeholder(tf.float32)
-keep_prob_75 = tf.placeholder(tf.float32)
+
+imgs = []
+labs = []
 
 
 def getPaddingSize(img):
@@ -40,42 +41,45 @@ def getPaddingSize(img):
 
 
 def readData(path, h=size, w=size):
-    imgs, labs = []
     for filename in os.listdir(path):
         if filename.endswith('.jpg'):
             filename = path + '/' + filename
+
             img = cv2.imread(filename)
+
             top, bottom, left, right = getPaddingSize(img)
             # 将图片放大， 扩充图片边缘部分
             img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
             img = cv2.resize(img, (h, w))
+
             imgs.append(img)
             labs.append(path)
-    return imgs, labs
 
 
-def prepareStart():
-    imgs, labs = []
-    imgs_m, labs_m = readData(my_faces_path)
-    imgs_o, labs_o = readData(other_faces_path)
-    imgs.append(imgs_m)
-    imgs.append(imgs_o)
-    labs.append(labs_m)
-    labs.append(labs_o)
+readData(my_faces_path)
+readData(other_faces_path)
+# 将图片数据与标签转换成数组
+imgs = np.array(imgs)
+labs = np.array([[0, 1] if lab == my_faces_path else [1, 0] for lab in labs])
+# 随机划分测试集与训练集
+train_x, test_x, train_y, test_y = train_test_split(imgs, labs, test_size=0.05, random_state=random.randint(0, 100))
+# 参数：图片数据的总数，图片的高、宽、通道
+train_x = train_x.reshape(train_x.shape[0], size, size, 3)
+test_x = test_x.reshape(test_x.shape[0], size, size, 3)
+# 将数据转换成小于1的数
+train_x = train_x.astype('float32') / 255.0
+test_x = test_x.astype('float32') / 255.0
 
-    # 将图片数据与标签转换成数组
-    imgs = np.array(imgs)
-    labs = np.array([[0, 1] if lab == my_faces_path else [1, 0] for lab in labs])
-    # 随机划分测试集与训练集
-    train_x, test_x, train_y, test_y = train_test_split(imgs, labs, test_size=0.05, random_state=random.randint(0, 100))
-    # 参数：图片数据的总数，图片的高、宽、通道
-    train_x = train_x.reshape(train_x.shape[0], size, size, 3)
-    test_x = test_x.reshape(test_x.shape[0], size, size, 3)
-    # 将数据转换成小于1的数
-    train_x = train_x.astype('float32') / 255.0
-    test_x = test_x.astype('float32') / 255.0
-    print('train size:%s, test size:%s' % (len(train_x), len(test_x)))
-    num_batch = len(train_x) // batch_size
+print('train size:%s, test size:%s' % (len(train_x), len(test_x)))
+# 图片块，每次取100张图片
+batch_size = 100
+num_batch = len(train_x) // batch_size
+
+x = tf.placeholder(tf.float32, [None, size, size, 3])
+y_ = tf.placeholder(tf.float32, [None, 2])
+
+keep_prob_5 = tf.placeholder(tf.float32)
+keep_prob_75 = tf.placeholder(tf.float32)
 
 
 def weightVariable(shape):
@@ -155,7 +159,8 @@ def cnnTrain():
         sess.run(tf.global_variables_initializer())
         summary_writer = tf.summary.FileWriter('I:/Python35/graphs/face', graph=tf.get_default_graph())
         for n in range(10):
-            for i in range(num_batch):  # 每次取128(batch_size)张图片
+            # 每次取128(batch_size)张图片
+            for i in range(num_batch):
                 batch_x = train_x[i * batch_size: (i + 1) * batch_size]
                 batch_y = train_y[i * batch_size: (i + 1) * batch_size]
                 # 开始训练数据，同时训练三个变量，返回三个数据
@@ -163,7 +168,7 @@ def cnnTrain():
                                             feed_dict={x: batch_x, y_: batch_y, keep_prob_5: 0.5, keep_prob_75: 0.75})
                 summary_writer.add_summary(summary, n * num_batch + i)
                 # 打印损失
-                print(n * num_batch + i, loss, n)
+                # print(n * num_batch + i, loss)
 
                 if (n * num_batch + i) % 100 == 0:
                     # 获取测试数据的准确率
@@ -176,7 +181,7 @@ def cnnTrain():
         print('accuracy less 0.98, exited!')
 
 
-# cnnTrain()
+
 
 output = cnnLayer()
 predict = tf.argmax(output, 1)
