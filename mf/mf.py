@@ -1,7 +1,7 @@
 # coding:UTF-8
 '''
-Date:20160928
-@author: zhaozhiyong
+矩阵分解推荐算法
+
 '''
 import numpy as np
 

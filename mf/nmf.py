@@ -3,12 +3,17 @@
 import numpy as np
 from mf import load_data, save_file, prediction, top_k
 
-def train(V, r, maxCycles, e):
+'''
+非负矩阵分解算法
+'''
+
+
+def train(V, k, maxCycles, e):
     m, n = np.shape(V)
     # 1、初始化矩阵
-    W = np.mat(np.random.random((m, r)))
-    H = np.mat(np.random.random((r, n)))
-    
+    W = np.mat(np.random.random((m, k)))
+    H = np.mat(np.random.random((k, n)))
+
     # 2、非负矩阵分解
     for step in xrange(maxCycles):
         V_pre = W * H
@@ -21,23 +26,23 @@ def train(V, r, maxCycles, e):
         if err < e:
             break
         if step % 1000 == 0:
-            print "\titer: ", step, " loss: " , err
+            print "\titer: ", step, " loss: ", err
 
         a = W.T * V
         b = W.T * W * H
-        for i_1 in xrange(r):
-            for j_1 in xrange(n):
-                if b[i_1, j_1] != 0:
-                    H[i_1, j_1] = H[i_1, j_1] * a[i_1, j_1] / b[i_1, j_1]
+        for i in xrange(k):
+            for j in xrange(n):
+                if b[i, j] != 0:
+                    H[i, j] = H[i, j] * a[i, j] / b[i, j]
 
         c = V * H.T
         d = W * H * H.T
-        for i_2 in xrange(m):
-            for j_2 in xrange(r):
-                if d[i_2, j_2] != 0:
-                    W[i_2, j_2] = W[i_2, j_2] * c[i_2, j_2] / d[i_2, j_2]
+        for i in xrange(m):
+            for j in xrange(k):
+                if d[i, j] != 0:
+                    W[i, j] = W[i, j] * c[i, j] / d[i, j]
 
-    return W, H 
+    return W, H
 
 
 if __name__ == "__main__":
@@ -45,7 +50,7 @@ if __name__ == "__main__":
     print "----------- 1、load data -----------"
     V = load_data("data.txt")
     # 2、非负矩阵分解
-    print "----------- 2、training -----------"    
+    print "----------- 2、training -----------"
     W, H = train(V, 5, 10000, 1e-5)
     # 3、保存分解后的结果
     print "----------- 3、save decompose -----------"
